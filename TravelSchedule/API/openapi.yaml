@@ -321,6 +321,31 @@ paths:
             text/html:
               schema:
                 $ref: '#/components/schemas/AllStationsResponse'
+  /copyright/:
+    get:
+      tags: [Catalog]
+      summary: Копирайт Яндекс Расписаний
+      operationId: getCopyrights
+      parameters:
+        - name: apikey
+          in: query
+          required: true
+          schema: { type: string }
+        - name: lang
+          in: query
+          required: false
+          schema: { type: string }
+        - name: format
+          in: query
+          required: false
+          schema: { type: string }
+      responses:
+        "200":
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CopyrightsResponse'
 components:
   schemas:
     Stations:
@@ -783,3 +808,6 @@ components:
     NearestSettlementResponse:
       allOf:
         - $ref: '#/components/schemas/NearestCityResponse'
+    CopyrightsResponse:
+      type: object
+      additionalProperties: true
