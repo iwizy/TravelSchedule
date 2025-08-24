@@ -736,6 +736,8 @@ components:
     CarrierResponse:
       type: object
       properties:
+        carrier:
+          $ref: '#/components/schemas/Carrier'
         carriers:
           type: array
           items:
