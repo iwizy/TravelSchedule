@@ -19,14 +19,14 @@ struct ContentView: View {
         }
         .padding()
         .onAppear {
-            // testFetchCarrier()
-            // testFetchNearestStations()
-            // testFetchNearestSettlement()
-            // testFetchSearch()
-            // - ошибка testFetchStationSchedule()
-            // - ошибка testFetchThread()
-            // - ошибка testFetchStationsList()
-            // testFetchCopyright()
+            testFetchCarrier()
+            testFetchNearestStations()
+            testFetchNearestSettlement()
+            testFetchSearch()
+            testFetchStationSchedule()
+            testFetchThread()
+            testFetchStationsList()
+            testFetchCopyright()
         }
     }
     
@@ -128,7 +128,7 @@ struct ContentView: View {
         }
     }
     
-    // Тестовый вызов StationScheduleService (расписание по станции)
+    // Тестовый вызов StationScheduleService
     func testFetchStationSchedule() {
         Task {
             do {
@@ -156,7 +156,7 @@ struct ContentView: View {
         }
     }
     
-    // Тестовый вызов ThreadService (по UID нитки)
+    // Тестовый вызов ThreadService
     func testFetchThread() {
         Task {
             do {
@@ -168,9 +168,8 @@ struct ContentView: View {
                     client: client,
                     apikey: Constants.apiKey
                 )
-                // ⚠️ Нужно подставить реальный uid нитки
                 _ = try await service.getThread(
-                    uid: "REAL_THREAD_UID",
+                    uid: "018J_5_2",
                     from: nil,
                     to: nil,
                     date: nil,

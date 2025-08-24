@@ -27,12 +27,26 @@ final class StationsListService: StationsListServiceProtocol {
 
     func getStationsList() async throws -> AllStationsResponse {
         let output = try await client.getStationsList(query: .init(
-            apikey: apikey
+            apikey: apikey,
+            lang: "ru_RU",
+            format: "json"
         ))
 
         switch output {
         case .ok(let ok):
-            return try ok.body.json
+            switch ok.body {
+            case .json(let payload):
+                // Нормальный случай: Content-Type: application/json
+                return payload
+
+            case .html(let body):
+                var data = Data()
+                for try await chunk in body {
+                    data.append(contentsOf: chunk)   // добавляем байты, а не Data
+                }
+                return try JSONDecoder().decode(AllStationsResponse.self, from: data)
+            }
+
         default:
             throw URLError(.badServerResponse)
         }
