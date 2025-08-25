@@ -34,10 +34,11 @@ struct ContentView: View {
     func testFetchCarrier() {
         Task {
             do {
-                let client = Client(
-                    serverURL: URL(string: "https://api.rasp.yandex.net/v3.0")!,
-                    transport: URLSessionTransport()
-                )
+                guard let url = URL(string: Constants.apiURL) else {
+                    print("❌ Invalid base URL")
+                    return
+                }
+                let client = Client(serverURL: url, transport: URLSessionTransport())
                 let service = CarrierService(client: client, apikey: Constants.apiKey)
                 let resp = try await service.getCarrier(code: "TK", system: "iata")
 
@@ -60,10 +61,11 @@ struct ContentView: View {
     func testFetchNearestStations() {
         Task {
             do {
-                let client = Client(
-                    serverURL: URL(string: "https://api.rasp.yandex.net/v3.0")!,
-                    transport: URLSessionTransport()
-                )
+                guard let url = URL(string: Constants.apiURL) else {
+                    print("❌ Invalid base URL")
+                    return
+                }
+                let client = Client(serverURL: url, transport: URLSessionTransport())
                 let service = NearestStationsService(client: client, apikey: Constants.apiKey)
 
                 let resp = try await service.getNearestStations(lat: 55.75222, lng: 37.61556, distance: 10)
@@ -85,10 +87,11 @@ struct ContentView: View {
     func testFetchNearestSettlement() {
         Task {
             do {
-                let client = Client(
-                    serverURL: URL(string: "https://api.rasp.yandex.net/v3.0")!,
-                    transport: URLSessionTransport()
-                )
+                guard let url = URL(string: Constants.apiURL) else {
+                    print("❌ Invalid base URL")
+                    return
+                }
+                let client = Client(serverURL: url, transport: URLSessionTransport())
                 let service = NearestSettlementService(client: client, apikey: Constants.apiKey)
 
                 let resp = try await service.getNearestSettlement(lat: 55.75222, lng: 37.61556, distance: 10)
@@ -106,10 +109,11 @@ struct ContentView: View {
     func testFetchSearch() {
         Task {
             do {
-                let client = Client(
-                    serverURL: URL(string: "https://api.rasp.yandex.net/v3.0")!,
-                    transport: URLSessionTransport()
-                )
+                guard let url = URL(string: Constants.apiURL) else {
+                    print("❌ Invalid base URL")
+                    return
+                }
+                let client = Client(serverURL: url, transport: URLSessionTransport())
                 let service = SearchService(client: client, apikey: Constants.apiKey)
 
                 let resp = try await service.getScheduleBetweenStations(
@@ -140,10 +144,11 @@ struct ContentView: View {
     func testFetchStationSchedule() {
         Task {
             do {
-                let client = Client(
-                    serverURL: URL(string: "https://api.rasp.yandex.net/v3.0")!,
-                    transport: URLSessionTransport()
-                )
+                guard let url = URL(string: Constants.apiURL) else {
+                    print("❌ Invalid base URL")
+                    return
+                }
+                let client = Client(serverURL: url, transport: URLSessionTransport())
                 let service = StationScheduleService(client: client, apikey: Constants.apiKey)
 
                 let resp = try await service.getScheduleOnStation(
@@ -176,10 +181,11 @@ struct ContentView: View {
     func testFetchThread(uid: String, date: String? = nil) {
         Task {
             do {
-                let client = Client(
-                    serverURL: URL(string: "https://api.rasp.yandex.net/v3.0")!,
-                    transport: URLSessionTransport()
-                )
+                guard let url = URL(string: Constants.apiURL) else {
+                    print("❌ Invalid base URL")
+                    return
+                }
+                let client = Client(serverURL: url, transport: URLSessionTransport())
                 let service = ThreadService(client: client, apikey: Constants.apiKey)
 
                 let resp = try await service.getThread(uid: uid, from: nil, to: nil, date: date, showSystems: nil)
@@ -202,10 +208,11 @@ struct ContentView: View {
     func testFetchStationsList() {
         Task {
             do {
-                let client = Client(
-                    serverURL: URL(string: "https://api.rasp.yandex.net/v3.0")!,
-                    transport: URLSessionTransport()
-                )
+                guard let url = URL(string: Constants.apiURL) else {
+                    print("❌ Invalid base URL")
+                    return
+                }
+                let client = Client(serverURL: url, transport: URLSessionTransport())
                 let service = StationsListService(client: client, apikey: Constants.apiKey)
 
                 let resp = try await service.getStationsList()
@@ -226,10 +233,11 @@ struct ContentView: View {
     func testFetchCopyright() {
         Task {
             do {
-                let client = Client(
-                    serverURL: URL(string: "https://api.rasp.yandex.net/v3.0")!,
-                    transport: URLSessionTransport()
-                )
+                guard let url = URL(string: Constants.apiURL) else {
+                    print("❌ Invalid base URL")
+                    return
+                }
+                let client = Client(serverURL: url, transport: URLSessionTransport())
                 let service = CopyrightService(client: client, apikey: Constants.apiKey)
 
                 _ = try await service.getCopyrights()
