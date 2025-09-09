@@ -2,17 +2,247 @@
 //  MainView.swift
 //  TravelSchedule
 //
-//  Created by Alexander Agafonov on 07.09.2025.
-//
+//  Вью главного экрана
 
 import SwiftUI
 
 struct MainView: View {
+
+    @State private var activeStoryID: UUID?
+    
+    @State private var fromCity: String?
+    @State private var fromStation: String?
+    @State private var toCity: String?
+    @State private var toStation: String?
+    
+    private let stories: [StoryItem] = [
+        .init(title: "Text Text Text Text Text Text Text", imageName: "item1"),
+        .init(title: "Text Text Text Text Text Text Text", imageName: "item2"),
+        .init(title: "Text Text Text Text Text Text Text", imageName: "item3"),
+        .init(title: "Text Text Text Text Text Text Text", imageName: "item4"),
+        .init(title: "Text Text Text Text Text Text Text", imageName: "item5")
+    ]
+    
     var body: some View {
-        Text("Hello, Main screen!")
+        VStack(spacing: 20) {
+            
+            storiesCarousel
+                .padding(.top, 6)
+            
+            routeCard
+            
+            if isRouteComplete {
+                findButton
+                    .padding(.top, 6)
+            }
+            
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 16)
+        .padding(.bottom, 8)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar { ToolbarItem(placement: .principal) { EmptyView() } }
+        .background(.ypWhite)
+    }
+    
+    private var storiesCarousel: some View {
+        ScrollView(.horizontal) {
+            LazyHStack(spacing: 12) {
+                ForEach(stories) { item in
+                    StoryCardView(
+                        title: item.title,
+                        imageName: item.imageName,
+                        isActive: item.id == activeStoryID
+                    )
+                    .id(item.id)
+                    .onTapGesture {
+                        withAnimation(.snappy) { activeStoryID = item.id }
+                    }
+                }
+            }
+            .padding(.horizontal, 2)
+            .scrollTargetLayout()
+        }
+        .scrollIndicators(.hidden)
+        .scrollTargetBehavior(.viewAligned)
+        .scrollPosition(id: $activeStoryID)
+        .frame(height: 140 + 8)
+        .onAppear {
+            if activeStoryID == nil { activeStoryID = stories.first?.id }
+        }
+    }
+    
+    private var routeCard: some View {
+        ZStack(alignment: .trailing) {
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(.ypBlueUniversal)
+                .frame(maxWidth: .infinity, maxHeight: 128)
+
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(Color(.ypWhiteUniversal))
+                .frame(maxWidth: .infinity, maxHeight: 96)
+                .padding(.leading, 16)
+                .padding(.vertical, 16)
+                .padding(.trailing, 68)
+                .overlay(
+                    VStack(alignment: .leading, spacing: 24) {
+                        Button {
+                        } label: {
+                            RouteTextRow(
+                                placeholder: "Откуда",
+                                valueText: fromTitle
+                            )
+                        }
+                        .buttonStyle(.plain)
+
+                        Button {
+                        } label: {
+                            RouteTextRow(
+                                placeholder: "Куда",
+                                valueText: toTitle
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 14)
+                )
+
+            Button {
+                swapRoute()
+            } label: {
+                ZStack {
+                    Circle()
+                        .fill(Color(.ypWhiteUniversal))
+                        .frame(width: 36, height: 36)
+
+                    Image("SwapIcon")
+                        .foregroundStyle(.ypBlueUniversal)
+                }
+               
+            }
+            .buttonStyle(.plain)
+            .padding(.trailing, 16)
+            .sensoryFeedback(.impact, trigger: fromCity ?? "" + (toCity ?? ""))
+        }
+    }
+    
+    private var routeFields: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            
+            Button {
+            } label: {
+                RouteTextRow(
+                    placeholder: "Откуда",
+                    valueText: fromTitle
+                )
+            }
+            .buttonStyle(.plain)
+
+            
+            Button {
+            } label: {
+                RouteTextRow(
+                    placeholder: "Куда",
+                    valueText: toTitle
+                )
+            }
+            .buttonStyle(.plain)
+        }
+    }
+    
+    private var findButton: some View {
+        Button {
+        } label: {
+            Text("Найти")
+                .font(.headline)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+        }
+        .buttonStyle(.borderedProminent)
+        .controlSize(.large)
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+    
+    private var isRouteComplete: Bool {
+        fromCity != nil && fromStation != nil && toCity != nil && toStation != nil
+    }
+    
+    private var fromTitle: String {
+        if let c = fromCity, let s = fromStation { return "\(c) (\(s))" }
+        return ""
+    }
+    
+    private var toTitle: String {
+        if let c = toCity, let s = toStation { return "\(c) (\(s))" }
+        return ""
+    }
+    
+    private func swapRoute() {
+        withAnimation(.easeInOut) {
+            swap(&fromCity, &toCity)
+            swap(&fromStation, &toStation)
+        }
+    }
+}
+
+private struct StoryCardView: View {
+    let title: String
+    let imageName: String
+    let isActive: Bool
+
+    var body: some View {
+        ZStack(alignment: .bottomLeading) {
+            Image(imageName)
+                .resizable()
+                .scaledToFill()
+                .frame(width: 92, height: 140)
+                .clipped()
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(isActive ? Color.ypBlueUniversal : Color.clear, lineWidth: 4)
+                .frame(width: 92, height: 140)
+
+            Text(title)
+                .font(.footnote.weight(.regular))
+                .foregroundStyle(.ypWhiteUniversal)
+                .lineLimit(3)
+                .multilineTextAlignment(.leading)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 12)
+        }
+        .frame(width: 92, height: 140)
+        .opacity(isActive ? 1.0 : 0.55)
+    }
+}
+
+private struct RouteTextRow: View {
+    let placeholder: String
+    let valueText: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if valueText.isEmpty {
+                Text(placeholder)
+                    .font(.system(size: 17, weight: .regular))
+                    .foregroundStyle(.ypGrayUniversal)
+                    .tint(.ypGrayUniversal)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.leading, 8)
+            } else {
+                Text(valueText)
+                    .font(.system(size: 17, weight: .regular))
+                    .foregroundStyle(.ypGrayUniversal)
+                    .tint(.ypGrayUniversal)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.leading, 8)
+            }
+        }
+        .contentShape(Rectangle())
     }
 }
 
 #Preview {
-    MainView()
+    NavigationStack { MainView() }
 }

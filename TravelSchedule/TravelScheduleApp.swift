@@ -12,7 +12,7 @@ struct TravelScheduleApp: App {
     init() {
         let appearance = UITabBarAppearance()
         appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor.systemBackground
+        appearance.backgroundColor = .ypWhite
         appearance.shadowColor = UIColor(.ypBlack)
         
         UITabBar.appearance().standardAppearance = appearance
