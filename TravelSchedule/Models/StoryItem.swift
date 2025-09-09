@@ -2,8 +2,7 @@
 //  StoryItem.swift
 //  TravelSchedule
 //
-//  Created by Alexander Agafonov on 08.09.2025.
-//
+//  Модель элемента историй
 
 import Foundation
 

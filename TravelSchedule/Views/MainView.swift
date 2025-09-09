@@ -2,12 +2,14 @@
 //  MainView.swift
 //  TravelSchedule
 //
-//  Вью главного экрана
+//  Главный экран
 
 import SwiftUI
 
 struct MainView: View {
-
+    
+    @EnvironmentObject var router: MainRouter
+    
     @State private var activeStoryID: UUID?
     
     @State private var fromCity: String?
@@ -43,6 +45,26 @@ struct MainView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { ToolbarItem(placement: .principal) { EmptyView() } }
         .background(.ypWhite)
+        
+        .navigationDestination(for: MainRoute.self) { route in
+            switch route {
+            case .city(let field):
+                CityPickerView(field: field)
+                
+            case .station(let city, let field):
+                StationPickerView(city: city) { station in
+                    switch field {
+                    case .from:
+                        fromCity = city.name
+                        fromStation = station.name
+                    case .to:
+                        toCity = city.name
+                        toStation = station.name
+                    }
+                    router.path = []
+                }
+            }
+        }
     }
     
     private var storiesCarousel: some View {
@@ -77,7 +99,7 @@ struct MainView: View {
             RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .fill(.ypBlueUniversal)
                 .frame(maxWidth: .infinity, maxHeight: 128)
-
+            
             RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .fill(Color(.ypWhiteUniversal))
                 .frame(maxWidth: .infinity, maxHeight: 96)
@@ -87,6 +109,7 @@ struct MainView: View {
                 .overlay(
                     VStack(alignment: .leading, spacing: 24) {
                         Button {
+                            router.path.append(.city(.from))
                         } label: {
                             RouteTextRow(
                                 placeholder: "Откуда",
@@ -94,8 +117,9 @@ struct MainView: View {
                             )
                         }
                         .buttonStyle(.plain)
-
+                        
                         Button {
+                            router.path.append(.city(.to))
                         } label: {
                             RouteTextRow(
                                 placeholder: "Куда",
@@ -103,11 +127,12 @@ struct MainView: View {
                             )
                         }
                         .buttonStyle(.plain)
+                        
                     }
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 14)
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 14)
                 )
-
+            
             Button {
                 swapRoute()
             } label: {
@@ -115,39 +140,14 @@ struct MainView: View {
                     Circle()
                         .fill(Color(.ypWhiteUniversal))
                         .frame(width: 36, height: 36)
-
+                    
                     Image("SwapIcon")
                         .foregroundStyle(.ypBlueUniversal)
                 }
-               
             }
             .buttonStyle(.plain)
             .padding(.trailing, 16)
             .sensoryFeedback(.impact, trigger: fromCity ?? "" + (toCity ?? ""))
-        }
-    }
-    
-    private var routeFields: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            
-            Button {
-            } label: {
-                RouteTextRow(
-                    placeholder: "Откуда",
-                    valueText: fromTitle
-                )
-            }
-            .buttonStyle(.plain)
-
-            
-            Button {
-            } label: {
-                RouteTextRow(
-                    placeholder: "Куда",
-                    valueText: toTitle
-                )
-            }
-            .buttonStyle(.plain)
         }
     }
     
@@ -190,7 +190,7 @@ private struct StoryCardView: View {
     let title: String
     let imageName: String
     let isActive: Bool
-
+    
     var body: some View {
         ZStack(alignment: .bottomLeading) {
             Image(imageName)
@@ -199,11 +199,11 @@ private struct StoryCardView: View {
                 .frame(width: 92, height: 140)
                 .clipped()
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-
+            
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .stroke(isActive ? Color.ypBlueUniversal : Color.clear, lineWidth: 4)
                 .frame(width: 92, height: 140)
-
+            
             Text(title)
                 .font(.footnote.weight(.regular))
                 .foregroundStyle(.ypWhiteUniversal)
@@ -220,7 +220,7 @@ private struct StoryCardView: View {
 private struct RouteTextRow: View {
     let placeholder: String
     let valueText: String
-
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             if valueText.isEmpty {

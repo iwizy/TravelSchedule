@@ -13,31 +13,27 @@ enum AppTab: Hashable {
 
 struct RootTabsView: View {
     @State private var selectedTab: AppTab = .main
-
-    @State private var mainPath = NavigationPath()
+    @StateObject private var mainRouter = MainRouter()
     @State private var settingsPath = NavigationPath()
-
+    
     var body: some View {
         TabView(selection: $selectedTab) {
-            NavigationStack(path: $mainPath) {
+            NavigationStack(path: $mainRouter.path) {
                 MainView()
-                   .navigationBarTitleDisplayMode(.inline)
-            }
-            .tabItem {
-                Image("TabIconMain")
-            }
-            .tag(AppTab.main)
-
-            NavigationStack(path: $settingsPath) {
-                SettingsView()
                     .navigationBarTitleDisplayMode(.inline)
             }
-            .tabItem {
-                Image("TabIconSettings")
+            .environmentObject(mainRouter)
+            .tabItem { Image("TabIconMain") }
+            .tag(AppTab.main)
+            
+            NavigationStack(path: $settingsPath) {
+                SettingsView()
+                    .navigationTitle("Настройки")
+                    .navigationBarTitleDisplayMode(.inline)
             }
+            .tabItem { Image("TabIconSettings") }
             .tag(AppTab.settings)
         }
-        .tint(.ypBlack)
     }
 }
 
