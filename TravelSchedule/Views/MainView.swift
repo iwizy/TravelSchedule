@@ -26,16 +26,17 @@ struct MainView: View {
     ]
     
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 0) {
             
             storiesCarousel
-                .padding(.top, 6)
+                .padding(.top, 16)
             
             routeCard
+                .padding(.top, 44)
             
             if isRouteComplete {
                 findButton
-                    .padding(.top, 6)
+                    .padding(.top, 16)
             }
             
             Spacer(minLength: 0)
@@ -98,7 +99,8 @@ struct MainView: View {
         ZStack(alignment: .trailing) {
             RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .fill(.ypBlueUniversal)
-                .frame(maxWidth: .infinity, maxHeight: 128)
+                .frame(maxWidth: .infinity)
+                .frame(height: 128)
             
             RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .fill(Color(.ypWhiteUniversal))
@@ -153,15 +155,19 @@ struct MainView: View {
     
     private var findButton: some View {
         Button {
+            print("Вызов списка перевозчиков сообщения")
         } label: {
             Text("Найти")
-                .font(.headline)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
+                .font(.system(size: 17, weight: .bold))
+                .frame(width: 150, height: 60)
+                .foregroundStyle(.white)
+                .background(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(Color.ypBlueUniversal)
+                )
         }
-        .buttonStyle(.borderedProminent)
-        .controlSize(.large)
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .buttonStyle(.plain)
+        .padding(.top, 0)
     }
     
     private var isRouteComplete: Bool {
@@ -233,10 +239,13 @@ private struct RouteTextRow: View {
             } else {
                 Text(valueText)
                     .font(.system(size: 17, weight: .regular))
-                    .foregroundStyle(.ypGrayUniversal)
+                    .foregroundStyle(.ypBlackUniversal)
                     .tint(.ypGrayUniversal)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.leading, 8)
+                    .padding(.trailing, 56)
             }
         }
         .contentShape(Rectangle())
