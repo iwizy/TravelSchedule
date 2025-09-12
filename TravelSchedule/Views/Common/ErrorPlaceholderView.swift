@@ -9,7 +9,7 @@ import SwiftUI
 enum AppErrorType {
     case server
     case noInternet
-
+    
     var title: String {
         switch self {
         case .server:     return "Ошибка сервера"
@@ -26,19 +26,19 @@ enum AppErrorType {
 
 struct ErrorPlaceholderView: View {
     let type: AppErrorType
-
+    
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 16) {
             Image(type.imageName)
                 .resizable()
                 .scaledToFit()
-                .frame(maxWidth: 260)
+                .frame(maxWidth: 223)
             Text(type.title)
-                .font(.title.weight(.semibold))
-                .foregroundStyle(.primary)
+                .font(.system(size: 24, weight: .bold))
+                .foregroundStyle(.ypBlack)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemBackground))
+        .background(Color(.ypWhite))
     }
 }
 
