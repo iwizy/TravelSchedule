@@ -49,22 +49,33 @@ struct MainView: View {
         
         .navigationDestination(for: MainRoute.self) { route in
             switch route {
-            case .city(let field):
-                CityPickerView(field: field)
-                
-            case .station(let city, let field):
-                StationPickerView(city: city) { station in
-                    switch field {
-                    case .from:
-                        fromCity = city.name
-                        fromStation = station.name
-                    case .to:
-                        toCity = city.name
-                        toStation = station.name
+                case .city(let field):
+                    CityPickerView(field: field)
+
+                case .station(let city, let field):
+                    StationPickerView(city: city) { station in
+                        switch field {
+                        case .from:
+                            fromCity = city.name
+                            fromStation = station.name
+                        case .to:
+                            toCity = city.name
+                            toStation = station.name
+                        }
+                        router.path = [] // возвращаемся на главный после выбора
                     }
-                    router.path = []
+
+                case .carriers(let summary):
+                    CarriersListView(summary: summary) {
+                        router.path.append(.filters) // «Уточнить время»
+                    }
+
+                case .filters:
+                    FiltersView { applied in
+                        // Нажали «Применить» — просто уходим назад на список перевозчиков
+                        router.path.removeLast() // закрыть .filters
+                    }
                 }
-            }
         }
     }
     
@@ -155,7 +166,17 @@ struct MainView: View {
     
     private var findButton: some View {
         Button {
-            print("Вызов списка перевозчиков сообщения")
+            // Защита от nil (кнопка у тебя сейчас видима всегда для отладки — поэтому осторожно)
+            guard
+                let fC = fromCity, let fS = fromStation,
+                let tC = toCity, let tS = toStation
+            else {
+                print("Маршрут не заполнен")
+                return
+            }
+
+            let summary = RouteSummary(fromCity: fC, fromStation: fS, toCity: tC, toStation: tS)
+            router.path.append(.carriers(summary))          // ← переходим на список перевозчиков
         } label: {
             Text("Найти")
                 .font(.system(size: 17, weight: .bold))

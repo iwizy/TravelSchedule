@@ -43,6 +43,7 @@ struct StationPickerView: View {
         .listStyle(.plain)
         .navigationTitle("Выбор станции")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .tabBar) 
     }
 }
 

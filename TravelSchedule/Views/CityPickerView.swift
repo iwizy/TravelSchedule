@@ -88,6 +88,7 @@ struct CityPickerView: View {
         .listStyle(.plain)
         .navigationTitle("Выбор города")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .tabBar) 
     }
 }
 
