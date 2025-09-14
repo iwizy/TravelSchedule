@@ -7,15 +7,13 @@
 import SwiftUI
 
 struct MainView: View {
-    
     @EnvironmentObject var router: MainRouter
-    
     @State private var activeStoryID: UUID?
-    
     @State private var fromCity: String?
     @State private var fromStation: String?
     @State private var toCity: String?
     @State private var toStation: String?
+    @StateObject private var carriersFilter = CarriersFilterModel()
     
     private let stories: [StoryItem] = [
         .init(title: "Text Text Text Text Text Text Text", imageName: "item1"),
@@ -65,16 +63,16 @@ struct MainView: View {
                         router.path = [] // возвращаемся на главный после выбора
                     }
 
-                case .carriers(let summary):
-                    CarriersListView(summary: summary) {
-                        router.path.append(.filters) // «Уточнить время»
-                    }
+            case .carriers(let summary):
+                CarriersListView(summary: summary)
+                    .environmentObject(carriersFilter)   // ← пробрасываем модель фильтров
 
-                case .filters:
-                    FiltersView { applied in
-                        // Нажали «Применить» — просто уходим назад на список перевозчиков
-                        router.path.removeLast() // закрыть .filters
-                    }
+            case .filters:
+                FiltersView { newFilters in
+                    carriersFilter.appliedFilters = newFilters  
+                    router.path.removeLast()
+                }
+                .environmentObject(carriersFilter)
                 }
         }
     }
@@ -166,17 +164,15 @@ struct MainView: View {
     
     private var findButton: some View {
         Button {
-            // Защита от nil (кнопка у тебя сейчас видима всегда для отладки — поэтому осторожно)
             guard
                 let fC = fromCity, let fS = fromStation,
                 let tC = toCity, let tS = toStation
             else {
-                print("Маршрут не заполнен")
                 return
             }
 
             let summary = RouteSummary(fromCity: fC, fromStation: fS, toCity: tC, toStation: tS)
-            router.path.append(.carriers(summary))          // ← переходим на список перевозчиков
+            router.path.append(.carriers(summary))
         } label: {
             Text("Найти")
                 .font(.system(size: 17, weight: .bold))
