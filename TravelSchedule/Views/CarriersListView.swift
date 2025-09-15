@@ -48,6 +48,18 @@ final class CarriersListViewModel: ObservableObject {
             dateText: "17 января", depart: "18:05", arrive: "23:15",
             durationText: "5 ч 10 м",
             transferNote: nil
+        ),
+        CarrierOption(
+            carrierName: "РЖД", logoName: "rzd_logo",
+            dateText: "17 января", depart: "18:05", arrive: "23:15",
+            durationText: "5 ч 10 м",
+            transferNote: nil
+        ),
+        CarrierOption(
+            carrierName: "Урал логистика", logoName: "ural_logo",
+            dateText: "16 января", depart: "12:30", arrive: "21:00",
+            durationText: "8 ч 30 м",
+            transferNote: nil
         )
     ]
 }
@@ -221,7 +233,7 @@ private struct CarrierRow: View {
                 
                 Text(option.dateText)
                     .font(.system(size: 12, weight: .regular))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.ypBlackUniversal)
                     .padding(.top, 15)
                     .padding(.trailing, 14)
             }
