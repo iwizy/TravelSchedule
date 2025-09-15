@@ -7,6 +7,7 @@
 import SwiftUI
 
 struct FiltersView: View {
+    @EnvironmentObject var filters: CarriersFilterModel
     @Environment(\.dismiss) private var dismiss
     @State private var selection = FiltersSelection()
     let onApply: (FiltersSelection) -> Void
@@ -38,7 +39,7 @@ struct FiltersView: View {
                     Text("Время отправления")
                         .font(.system(size: 24, weight: .bold))
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.vertical,0)
+                        .padding(.vertical, 0)
                         .textCase(nil)
                         .foregroundStyle(Color.ypBlack)
                 }
@@ -48,26 +49,27 @@ struct FiltersView: View {
                     radioRow(title: "Да",   isSelected: selection.transfers == true)  { selection.transfers = true  }
                         .listRowSeparator(.hidden)
                         .frame(height: 60)
+                        .listRowInsets(.init(top: 0, leading: 16, bottom: 0, trailing: 16))
 
                     radioRow(title: "Нет",  isSelected: selection.transfers == false) { selection.transfers = false }
                         .listRowSeparator(.hidden)
                         .frame(height: 60)
+                        .listRowInsets(.init(top: 0, leading: 16, bottom: 0, trailing: 16))
 
                 } header: {
                     Text("Показывать варианты с пересадками")
                         .font(.system(size: 24, weight: .bold))
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.vertical,0)
+                        .padding(.vertical, 0)
                         .textCase(nil)
                         .foregroundStyle(Color.ypBlack)
                 }
                 .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 16, trailing: 16))
-                
             }
             .listStyle(.plain)
             .listRowSpacing(0)
             .listSectionSpacing(.custom(0))
-            
+
             if selection.canApply {
                 Button {
                     onApply(selection)
@@ -104,6 +106,9 @@ struct FiltersView: View {
         }
         .tint(.ypBlack)
         .toolbar(.hidden, for: .tabBar)
+        .onAppear {
+            selection = filters.appliedFilters ?? FiltersSelection()
+        }
     }
 
     private func timeRow(_ band: FiltersSelection.TimeBand) -> some View {
@@ -178,5 +183,17 @@ private struct Radio: View {
         FiltersView(onApply: { value in
             print("APPLY:", value)
         })
+        .environmentObject(CarriersFilterModel())
+    }
+}
+
+#Preview("Фильтры — уже применены") {
+    let model = CarriersFilterModel()
+    model.appliedFilters = FiltersSelection(timeBands: [.morning, .evening], transfers: false)
+    return NavigationStack {
+        FiltersView(onApply: { value in
+            print("APPLY:", value)
+        })
+        .environmentObject(model)
     }
 }
