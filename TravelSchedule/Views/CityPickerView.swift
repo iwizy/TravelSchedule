@@ -19,10 +19,18 @@ struct Station: Identifiable, Hashable {
 
 struct CityPickerView: View {
     let field: RouteField
+
     @EnvironmentObject var router: MainRouter
-    
+
     @State private var query: String = ""
-    
+
+    init(field: RouteField, initialQuery: String? = nil) {
+        self.field = field
+        if let q = initialQuery {
+            _query = State(initialValue: q)
+        }
+    }
+
     private let allCities: [City] = [
         City(name: "Москва", stations: [
             Station(name: "Киевский вокзал"),
@@ -43,65 +51,76 @@ struct CityPickerView: View {
         City(name: "Казань", stations: [Station(name: "Казань-1")]),
         City(name: "Омск", stations: [Station(name: "Омск-Пасс.")])
     ]
-    
+
     private var filteredCities: [City] {
         let q = query.trimmingCharacters(in: .whitespaces).lowercased()
         guard !q.isEmpty else { return allCities }
         return allCities.filter { $0.name.lowercased().contains(q) }
     }
-    
+
     var body: some View {
-        List {
-            Section {
-                SearchBar(text: $query, placeholder: "Введите запрос")
-            }
-            .listRowSeparator(.hidden)
-            .listRowBackground(Color.clear)
-            
-            if filteredCities.isEmpty && !query.isEmpty {
-                VStack(spacing: 12) {
-                    Spacer(minLength: 60)
-                    Text("Город не найден")
-                        .font(.title2.weight(.semibold))
-                        .foregroundStyle(.primary)
-                    Spacer(minLength: 20)
+        ZStack {
+            List {
+                Section {
+                    SearchBar(text: $query, placeholder: "Введите запрос")
                 }
-                .frame(maxWidth: .infinity)
                 .listRowSeparator(.hidden)
                 .listRowBackground(Color.clear)
-            }
-            
-            ForEach(filteredCities) { city in
-                Button {
-                    router.path.append(.station(city, field))
-                } label: {
-                    HStack {
-                        Text(city.name)
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .foregroundStyle(.secondary)
+                .listRowInsets(.init(top: 0, leading: 16, bottom: 0, trailing: 16))
+
+                ForEach(Array(filteredCities.enumerated()), id: \.element.id) { idx, city in
+                    Button {
+                        router.path.append(.station(city, field))
+                    } label: {
+                        HStack {
+                            Text(city.name)
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .foregroundStyle(.ypBlack)
+                        }
                     }
+                    .buttonStyle(.plain)
+                    .listRowSeparator(.hidden)
+                    .frame(height: 60)
+                    .listRowInsets(.init(top: idx == 0 ? 16 : 0, leading: 16, bottom: 0, trailing: 16))
                 }
-                .buttonStyle(.plain)
+            }
+            .listStyle(.plain)
+            .listSectionSpacing(.custom(0))
+
+            if filteredCities.isEmpty && !query.isEmpty {
+                Text("Город не найден")
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundStyle(.ypBlack)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 24)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                    .allowsHitTesting(false)
             }
         }
-        .listStyle(.plain)
         .navigationTitle("Выбор города")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar(.hidden, for: .tabBar) 
+        .toolbar(.hidden, for: .tabBar)
     }
 }
 
-#Preview("CityPickerView — from") {
+#Preview("Список городов") {
     NavigationStack {
         CityPickerView(field: .from)
             .environmentObject(MainRouter())
     }
 }
 
-#Preview("CityPickerView — to") {
+#Preview("Город не найден") {
     NavigationStack {
-        CityPickerView(field: .to)
+        CityPickerView(field: .from, initialQuery: "wrgwerg")
+            .environmentObject(MainRouter())
+    }
+}
+
+#Preview("Город найден") {
+    NavigationStack {
+        CityPickerView(field: .from, initialQuery: "Москва")
             .environmentObject(MainRouter())
     }
 }
