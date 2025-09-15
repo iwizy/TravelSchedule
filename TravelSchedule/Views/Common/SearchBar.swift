@@ -13,7 +13,7 @@ struct SearchBar: View {
     var body: some View {
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.ypGrayUniversal)
             
             TextField(placeholder, text: $text)
                 .textInputAutocapitalization(.words)
@@ -24,15 +24,15 @@ struct SearchBar: View {
                     text = ""
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.ypGrayUniversal)
                 }
                 .buttonStyle(.plain)
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .background(Color(.systemGray5))
-        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .frame(width: .infinity, height: 36)
+        .padding(.horizontal, 8)
+        .background(Color(.ypLightGray))
+        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 }
 
