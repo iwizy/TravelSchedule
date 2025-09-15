@@ -18,6 +18,7 @@ struct SearchBar: View {
             TextField(placeholder, text: $text)
                 .textInputAutocapitalization(.words)
                 .autocorrectionDisabled(true)
+                .foregroundStyle(.ypBlack)
             
             if !text.isEmpty {
                 Button {
@@ -31,7 +32,7 @@ struct SearchBar: View {
         }
         .frame(width: .infinity, height: 36)
         .padding(.horizontal, 8)
-        .background(Color(.ypLightGray))
+        .background(Color(.ypSearch))
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 }

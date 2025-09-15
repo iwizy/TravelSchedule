@@ -76,15 +76,15 @@ struct FiltersView: View {
                 } label: {
                     Text("Применить")
                         .font(.system(size: 17, weight: .bold))
-                        .frame(maxWidth: .infinity, minHeight: 56)
-                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity, minHeight: 60)
+                        .foregroundStyle(.ypWhiteUniversal)
                         .background(
-                            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
                                 .fill(Color.ypBlueUniversal)
                         )
                 }
                 .buttonStyle(.plain)
-                .padding(.horizontal, 20)
+                .padding(.horizontal, 16)
                 .padding(.bottom, 12)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
                 .animation(.snappy, value: selection.canApply)
@@ -166,7 +166,7 @@ private struct Radio: View {
     var body: some View {
         ZStack {
             Circle()
-                .stroke(isOn ? Color.ypBlack : Color.primary.opacity(0.6), lineWidth: 2)
+                .stroke(isOn ? Color.ypBlack : Color(.ypBlack).opacity(0.6), lineWidth: 2)
                 .frame(width: 24, height: 24)
             if isOn {
                 Circle()

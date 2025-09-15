@@ -139,15 +139,15 @@ struct CarriersListView: View {
                             .transition(.scale.combined(with: .opacity))
                     }
                 }
-                .frame(maxWidth: .infinity, minHeight: 56)
-                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity, minHeight: 60)
+                .foregroundStyle(.ypWhiteUniversal)
                 .background(
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
                         .fill(Color.ypBlueUniversal)
                 )
             }
             .buttonStyle(.plain)
-            .padding(.horizontal, 24)
+            .padding(.horizontal, 16)
             .padding(.bottom, 12)
             .animation(.snappy, value: hasActiveFilters)
             .accessibilityLabel(Text(hasActiveFilters ? "Уточнить время, фильтры применены" : "Уточнить время"))
@@ -161,11 +161,11 @@ struct CarriersListView: View {
                     Image(systemName: "chevron.left")
                         .imageScale(.large)
                         .font(.system(size: 17, weight: .semibold))
-                        .foregroundStyle(.black)
+                        .foregroundStyle(.ypBlack)
                 }
             }
         }
-        .tint(.black)
+        .tint(.ypBlack)
         .toolbar(.hidden, for: .tabBar)
         .onDisappear {
             filters.appliedFilters = nil
@@ -247,7 +247,7 @@ private struct CarrierRow: View {
                 
                 Text(option.durationText)
                     .font(.system(size: 12, weight: .regular))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.ypBlackUniversal)
                 
                 DividerLine()
                 
@@ -269,7 +269,7 @@ private struct CarrierRow: View {
 private struct DividerLine: View {
     var body: some View {
         Rectangle()
-            .fill(Color(.systemGray3))
+            .fill(Color(.ypGrayUniversal))
             .frame(height: 1)
             .padding(.horizontal, 6)
     }

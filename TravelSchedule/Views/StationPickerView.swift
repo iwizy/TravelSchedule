@@ -9,9 +9,10 @@ import SwiftUI
 struct StationPickerView: View {
     let city: City
     let onPick: (_ station: Station) -> Void
-
+    
     @State private var stationQuery: String = ""
-
+    @Environment(\.dismiss) private var dismiss
+    
     init(city: City, initialQuery: String? = nil, onPick: @escaping (_ station: Station) -> Void) {
         self.city = city
         self.onPick = onPick
@@ -19,13 +20,13 @@ struct StationPickerView: View {
             _stationQuery = State(initialValue: q)
         }
     }
-
+    
     private var filteredStations: [Station] {
         let q = stationQuery.trimmingCharacters(in: .whitespaces).lowercased()
         guard !q.isEmpty else { return city.stations }
         return city.stations.filter { $0.name.lowercased().contains(q) }
     }
-
+    
     var body: some View {
         ZStack {
             List {
@@ -35,7 +36,7 @@ struct StationPickerView: View {
                 .listRowSeparator(.hidden)
                 .listRowBackground(Color.clear)
                 .listRowInsets(.init(top: 0, leading: 16, bottom: 0, trailing: 16))
-
+                
                 ForEach(Array(filteredStations.enumerated()), id: \.element.id) { idx, station in
                     Button {
                         onPick(station)
@@ -55,7 +56,7 @@ struct StationPickerView: View {
             }
             .listStyle(.plain)
             .listSectionSpacing(.custom(0))
-
+            
             if filteredStations.isEmpty && !stationQuery.isEmpty {
                 Text("Станция не найдена")
                     .font(.system(size: 24, weight: .bold))
@@ -68,8 +69,18 @@ struct StationPickerView: View {
         }
         .navigationTitle("Выбор станции")
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button { dismiss() } label: {
+                    Image(systemName: "chevron.left")
+                        .imageScale(.large)
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(.ypBlack)
+                }
+            }
+        }
         .toolbar(.hidden, for: .tabBar)
-        .ignoresSafeArea(.keyboard, edges: .bottom)
     }
 }
 
@@ -85,7 +96,7 @@ struct StationPickerView: View {
             Station(name: "Ленинградский вокзал")
         ]
     )
-
+    
     return NavigationStack {
         StationPickerView(city: demoCity) { station in
             print("Picked station: \(station.name)")
@@ -102,7 +113,7 @@ struct StationPickerView: View {
             Station(name: "Ярославский вокзал")
         ]
     )
-
+    
     return NavigationStack {
         StationPickerView(city: demoCity, initialQuery: "zzz") { _ in }
     }
@@ -117,7 +128,7 @@ struct StationPickerView: View {
             Station(name: "Ярославский вокзал")
         ]
     )
-
+    
     return NavigationStack {
         StationPickerView(city: demoCity, initialQuery: "Курск") { _ in }
     }

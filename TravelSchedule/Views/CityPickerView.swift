@@ -19,18 +19,19 @@ struct Station: Identifiable, Hashable {
 
 struct CityPickerView: View {
     let field: RouteField
-
+    
     @EnvironmentObject var router: MainRouter
-
+    @Environment(\.dismiss) private var dismiss
+    
     @State private var query: String = ""
-
+    
     init(field: RouteField, initialQuery: String? = nil) {
         self.field = field
         if let q = initialQuery {
             _query = State(initialValue: q)
         }
     }
-
+    
     private let allCities: [City] = [
         City(name: "Москва", stations: [
             Station(name: "Киевский вокзал"),
@@ -51,13 +52,13 @@ struct CityPickerView: View {
         City(name: "Казань", stations: [Station(name: "Казань-1")]),
         City(name: "Омск", stations: [Station(name: "Омск-Пасс.")])
     ]
-
+    
     private var filteredCities: [City] {
         let q = query.trimmingCharacters(in: .whitespaces).lowercased()
         guard !q.isEmpty else { return allCities }
         return allCities.filter { $0.name.lowercased().contains(q) }
     }
-
+    
     var body: some View {
         ZStack {
             List {
@@ -67,7 +68,7 @@ struct CityPickerView: View {
                 .listRowSeparator(.hidden)
                 .listRowBackground(Color.clear)
                 .listRowInsets(.init(top: 0, leading: 16, bottom: 0, trailing: 16))
-
+                
                 ForEach(Array(filteredCities.enumerated()), id: \.element.id) { idx, city in
                     Button {
                         router.path.append(.station(city, field))
@@ -87,7 +88,7 @@ struct CityPickerView: View {
             }
             .listStyle(.plain)
             .listSectionSpacing(.custom(0))
-
+            
             if filteredCities.isEmpty && !query.isEmpty {
                 Text("Город не найден")
                     .font(.system(size: 24, weight: .bold))
@@ -100,7 +101,18 @@ struct CityPickerView: View {
         }
         .navigationTitle("Выбор города")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar(.hidden, for: .tabBar)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button { dismiss() } label: {
+                    Image(systemName: "chevron.left")
+                        .imageScale(.large)
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(.ypBlack)
+                }
+            }
+        }
+        .toolbar(.hidden, for: .tabBar)       
     }
 }
 

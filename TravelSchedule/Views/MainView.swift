@@ -177,7 +177,7 @@ struct MainView: View {
             Text("Найти")
                 .font(.system(size: 17, weight: .bold))
                 .frame(width: 150, height: 60)
-                .foregroundStyle(.white)
+                .foregroundStyle(.ypWhiteUniversal)
                 .background(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
                         .fill(Color.ypBlueUniversal)
