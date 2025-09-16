@@ -34,6 +34,7 @@ struct RootTabsView: View {
             .tabItem { Image("TabIconSettings") }
             .tag(AppTab.settings)
         }
+        .tint(.ypBlack)
     }
 }
 
