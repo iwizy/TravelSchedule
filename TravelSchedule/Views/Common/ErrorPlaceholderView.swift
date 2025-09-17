@@ -12,14 +12,18 @@ enum AppErrorType {
     
     var title: String {
         switch self {
-        case .server:     return "Ошибка сервера"
-        case .noInternet: return "Нет интернета"
+        case .server:
+            "Ошибка сервера"
+        case .noInternet:
+            "Нет интернета"
         }
     }
     var imageName: String {
         switch self {
-        case .server:     return "error_server"
-        case .noInternet: return "error_offline"
+        case .server:
+            "error_server"
+        case .noInternet:
+            "error_offline"
         }
     }
 }

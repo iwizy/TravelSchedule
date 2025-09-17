@@ -6,17 +6,6 @@
 
 import SwiftUI
 
-struct CarrierOption: Identifiable, Hashable {
-    let id = UUID()
-    let carrierName: String
-    let logoName: String
-    let dateText: String
-    let depart: String
-    let arrive: String
-    let durationText: String
-    let transferNote: String?
-}
-
 final class CarriersListViewModel: ObservableObject {
     @Published var options: [CarrierOption] = [
         CarrierOption(
