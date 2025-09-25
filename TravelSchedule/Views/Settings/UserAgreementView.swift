@@ -10,7 +10,7 @@ import SwiftUI
 struct UserAgreementView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var blocks: [MDBlock] = []
-
+    
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -21,18 +21,23 @@ struct UserAgreementView: View {
                 }
                 .padding(24)
             }
+            .scrollContentBackground(.hidden)
+            .background(Color.ypWhite.ignoresSafeArea())
             .navigationTitle("Пользовательское соглашение")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button { dismiss() } label: { Image(systemName: "chevron.left") }
+                        .foregroundStyle(.ypBlack)
                 }
             }
         }
         .task { loadMarkdown() }
         .ignoresSafeArea(edges: .bottom)
+        
     }
-
+    
+    
     private func loadMarkdown() {
         guard let url = Bundle.main.url(forResource: "UserAgreement", withExtension: "md"),
               let md = try? String(contentsOf: url, encoding: .utf8)
@@ -47,20 +52,20 @@ struct UserAgreementView: View {
 #Preview {
     let md = """
     # ДОГОВОР-ОФЕРТА
-
+    
     на оказание образовательных услуг
-
+    
     ## 1. Общие положения
-
+    
     Настоящий документ является официальным предложением...
-
+    
     ## 2. Права и обязанности сторон
-
+    
     - Исполнитель обязуется ...
     - Заказчик обязуется ...
     """
     let blocks = MarkdownMini.parse(md)
-
+    
     return NavigationStack {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 16) {

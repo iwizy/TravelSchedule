@@ -21,9 +21,7 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // Контент
                 VStack(spacing: 0) {
-                    // Ряд: Тёмная тема
                     HStack(spacing: 12) {
                         Text("Тёмная тема")
                             .font(.system(size: 17, weight: .regular))
