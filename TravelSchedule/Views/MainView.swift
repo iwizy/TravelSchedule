@@ -74,6 +74,8 @@ struct MainView: View {
             case .carriers(let summary):
                 CarriersListView(summary: summary)
                     .environmentObject(carriersFilter)
+            case .carrierInfo(let carrier):
+                    CarrierInfoView(carrier: carrier)
                 
             case .filters:
                 FiltersView { newFilters in

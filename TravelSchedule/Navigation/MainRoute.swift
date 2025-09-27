@@ -26,5 +26,6 @@ enum MainRoute: Hashable {
     case city(RouteField)
     case station(City, RouteField)
     case carriers(RouteSummary)
+    case carrierInfo(Carrier)
     case filters
 }

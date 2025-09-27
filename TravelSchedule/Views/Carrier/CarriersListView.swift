@@ -12,43 +12,64 @@ final class CarriersListViewModel: ObservableObject {
             carrierName: "РЖД", logoName: "rzd_logo",
             dateText: "14 января", depart: "06:15", arrive: "12:05",
             durationText: "5 ч 50 м",
-            transferNote: nil
+            transferNote: nil,
+            email: nil,
+            phoneE164: nil,
+            phoneDisplay: nil
         ),
         CarrierOption(
             carrierName: "ФГК", logoName: "fgk_logo",
             dateText: "15 января", depart: "01:15", arrive: "09:00",
             durationText: "7 ч 45 м",
-            transferNote: "С пересадкой в Твери"
+            transferNote: "С пересадкой в Твери",
+            email: nil,
+            phoneE164: nil,
+            phoneDisplay: nil
         ),
         CarrierOption(
             carrierName: "Урал логистика", logoName: "ural_logo",
             dateText: "16 января", depart: "12:30", arrive: "21:00",
             durationText: "8 ч 30 м",
-            transferNote: nil
+            transferNote: nil,
+            email: nil,
+            phoneE164: nil,
+            phoneDisplay: nil
         ),
         CarrierOption(
             carrierName: "РЖД", logoName: "rzd_logo",
             dateText: "17 января", depart: "22:30", arrive: "08:15",
             durationText: "9 ч 45 м",
-            transferNote: "С пересадкой в Костроме"
+            transferNote: "С пересадкой в Костроме",
+            email: nil,
+            phoneE164: nil,
+            phoneDisplay: nil
         ),
         CarrierOption(
             carrierName: "РЖД", logoName: "rzd_logo",
             dateText: "17 января", depart: "18:05", arrive: "23:15",
             durationText: "5 ч 10 м",
-            transferNote: nil
+            transferNote: nil,
+            email: nil,
+            phoneE164: nil,
+            phoneDisplay: nil
         ),
         CarrierOption(
             carrierName: "РЖД", logoName: "rzd_logo",
             dateText: "17 января", depart: "18:05", arrive: "23:15",
             durationText: "5 ч 10 м",
-            transferNote: nil
+            transferNote: nil,
+            email: nil,
+            phoneE164: nil,
+            phoneDisplay: nil
         ),
         CarrierOption(
             carrierName: "Урал логистика", logoName: "ural_logo",
             dateText: "16 января", depart: "12:30", arrive: "21:00",
             durationText: "8 ч 30 м",
-            transferNote: nil
+            transferNote: nil,
+            email: nil,
+            phoneE164: nil,
+            phoneDisplay: nil
         )
     ]
 }
@@ -61,6 +82,7 @@ struct CarriersListView: View {
     @EnvironmentObject var router: MainRouter
     @EnvironmentObject var filters: CarriersFilterModel
     @StateObject private var vm = CarriersListViewModel()
+    
     
     private var filteredOptions: [CarrierOption] {
         guard let f = filters.appliedFilters else { return vm.options }
@@ -98,9 +120,15 @@ struct CarriersListView: View {
                 } else {
                     List {
                         ForEach(filteredOptions) { item in
-                            CarrierRow(option: item)
-                                .listRowSeparator(.hidden)
-                                .listRowInsets(.init(top: 0, leading: 16, bottom: 8, trailing: 16))
+                            Button {
+                                router.path.append(.carrierInfo(carrier(from: item)))
+                            } label: {
+                                CarrierRow(option: item)
+                                    .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                            }
+                            .buttonStyle(.plain)
+                            .listRowSeparator(.hidden)
+                            .listRowInsets(.init(top: 0, leading: 16, bottom: 8, trailing: 16))
                         }
                     }
                     .listStyle(.plain)
@@ -186,6 +214,20 @@ struct CarriersListView: View {
         let comps = hhmm.split(separator: ":")
         guard comps.count == 2, let h = Int(comps[0]) else { return nil }
         return h
+    }
+    
+    private func carrier(from option: CarrierOption) -> Carrier {
+        Carrier(
+            id: option.logoName,
+            name: option.carrierName,
+            logoAsset: option.logoName,
+            // email: nil,
+            // phoneE164: nil,
+            // phoneDisplay: nil
+            email: "info@carrier.ru",
+            phoneE164: "+79041234567",
+            phoneDisplay: "+7 (904) 123-45-67"
+        )
     }
 }
 
@@ -276,3 +318,4 @@ private struct DividerLine: View {
         .environmentObject(CarriersFilterModel())
     }
 }
+
