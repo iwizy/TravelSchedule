@@ -14,6 +14,9 @@ struct MainView: View {
     @State private var toCity: String?
     @State private var toStation: String?
     @StateObject private var carriersFilter = CarriersFilterModel()
+    @StateObject private var viewedStore = StoriesViewedStore()
+    @State private var showStories = false
+    @State private var selectedStoryIndex: Int = 0
     
     private let stories: [StoryItem] = [
         .init(title: "Text Text Text Text Text Text Text", imageName: "item1"),
@@ -45,50 +48,56 @@ struct MainView: View {
         .toolbar { ToolbarItem(placement: .principal) { EmptyView() } }
         .background(.ypWhite)
         
+        .fullScreenCover(isPresented: $showStories) {
+            StoriesFullScreenView(items: stories.asDisplayableBoxes, startIndex: selectedStoryIndex)
+                .environmentObject(viewedStore)
+        }
+        
         .navigationDestination(for: MainRoute.self) { route in
             switch route {
-                case .city(let field):
-                    CityPickerView(field: field)
-
-                case .station(let city, let field):
-                    StationPickerView(city: city) { station in
-                        switch field {
-                        case .from:
-                            fromCity = city.name
-                            fromStation = station.name
-                        case .to:
-                            toCity = city.name
-                            toStation = station.name
-                        }
-                        router.path = [] // возвращаемся на главный после выбора
+            case .city(let field):
+                CityPickerView(field: field)
+                
+            case .station(let city, let field):
+                StationPickerView(city: city) { station in
+                    switch field {
+                    case .from:
+                        fromCity = city.name
+                        fromStation = station.name
+                    case .to:
+                        toCity = city.name
+                        toStation = station.name
                     }
-
+                    router.path = []
+                }
+                
             case .carriers(let summary):
                 CarriersListView(summary: summary)
-                    .environmentObject(carriersFilter)   // ← пробрасываем модель фильтров
-
+                    .environmentObject(carriersFilter)
+                
             case .filters:
                 FiltersView { newFilters in
-                    carriersFilter.appliedFilters = newFilters  
+                    carriersFilter.appliedFilters = newFilters
                     router.path.removeLast()
                 }
                 .environmentObject(carriersFilter)
-                }
+            }
         }
     }
     
     private var storiesCarousel: some View {
         ScrollView(.horizontal) {
             LazyHStack(spacing: 12) {
-                ForEach(stories) { item in
+                ForEach(Array(stories.enumerated()), id: \.1.id) { (idx, item) in
                     StoryCardView(
                         title: item.title,
                         imageName: item.imageName,
-                        isActive: item.id == activeStoryID
+                        isViewed: viewedStore.isViewed(item.id)
                     )
                     .id(item.id)
                     .onTapGesture {
-                        withAnimation(.snappy) { activeStoryID = item.id }
+                        selectedStoryIndex = idx
+                        showStories = true
                     }
                 }
             }
@@ -170,7 +179,7 @@ struct MainView: View {
             else {
                 return
             }
-
+            
             let summary = RouteSummary(fromCity: fC, fromStation: fS, toCity: tC, toStation: tS)
             router.path.append(.carriers(summary))
         } label: {
@@ -209,10 +218,10 @@ struct MainView: View {
     }
 }
 
-private struct StoryCardView: View {
+struct StoryCardView: View {
     let title: String
     let imageName: String
-    let isActive: Bool
+    let isViewed: Bool
     
     var body: some View {
         ZStack(alignment: .bottomLeading) {
@@ -222,9 +231,10 @@ private struct StoryCardView: View {
                 .frame(width: 92, height: 140)
                 .clipped()
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .opacity(isViewed ? 0.5 : 1.0)
             
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(isActive ? Color.ypBlueUniversal : Color.clear, lineWidth: 4)
+                .stroke(isViewed ? Color.clear : Color.ypBlueUniversal, lineWidth: 4)
                 .frame(width: 92, height: 140)
             
             Text(title)
@@ -236,7 +246,6 @@ private struct StoryCardView: View {
                 .padding(.vertical, 12)
         }
         .frame(width: 92, height: 140)
-        .opacity(isActive ? 1.0 : 0.55)
     }
 }
 
@@ -266,6 +275,26 @@ private struct RouteTextRow: View {
             }
         }
         .contentShape(Rectangle())
+    }
+}
+
+struct StoryBox: StoryDisplayable {
+    let id: UUID
+    let imageName: String
+    let title: String?
+    let subtitle: String?
+}
+
+extension Array where Element == StoryItem {
+    var asDisplayableBoxes: [StoryBox] {
+        map { item in
+            StoryBox(
+                id: item.id,
+                imageName: item.imageName,
+                title: item.title,
+                subtitle: nil
+            )
+        }
     }
 }
 
