@@ -9,22 +9,20 @@ import SwiftUI
 struct MainView: View {
     @EnvironmentObject var router: MainRouter
     @State private var activeStoryID: UUID?
+    
     @State private var fromCity: String?
     @State private var fromStation: String?
     @State private var toCity: String?
     @State private var toStation: String?
+    
     @StateObject private var carriersFilter = CarriersFilterModel()
     @StateObject private var viewedStore = StoriesViewedStore()
-    @State private var showStories = false
-    @State private var selectedStoryIndex: Int = 0
     
-    private let stories: [StoryItem] = [
-        .init(title: "Text Text Text Text Text Text Text", imageName: "item1"),
-        .init(title: "Text Text Text Text Text Text Text", imageName: "item2"),
-        .init(title: "Text Text Text Text Text Text Text", imageName: "item3"),
-        .init(title: "Text Text Text Text Text Text Text", imageName: "item4"),
-        .init(title: "Text Text Text Text Text Text Text", imageName: "item5")
-    ]
+    @State private var showStories = false
+    @State private var selectedGroupIndex: Int = 0
+    @State private var selectedMediaIndex: Int = 0
+    
+    private let storyGroups: [StoryGroup] = StoriesMocks.groups
     
     var body: some View {
         VStack(spacing: 0) {
@@ -49,8 +47,12 @@ struct MainView: View {
         .background(.ypWhite)
         
         .fullScreenCover(isPresented: $showStories) {
-            StoriesFullScreenView(items: stories.asDisplayableBoxes, startIndex: selectedStoryIndex)
-                .environmentObject(viewedStore)
+            StoriesPlayerView(
+                groups: storyGroups,
+                startGroupIndex: selectedGroupIndex,
+                startMediaIndex: selectedMediaIndex
+            )
+            .environmentObject(viewedStore)
         }
         
         .navigationDestination(for: MainRoute.self) { route in
@@ -74,8 +76,9 @@ struct MainView: View {
             case .carriers(let summary):
                 CarriersListView(summary: summary)
                     .environmentObject(carriersFilter)
+                
             case .carrierInfo(let carrier):
-                    CarrierInfoView(carrier: carrier)
+                CarrierInfoView(carrier: carrier)
                 
             case .filters:
                 FiltersView { newFilters in
@@ -90,15 +93,16 @@ struct MainView: View {
     private var storiesCarousel: some View {
         ScrollView(.horizontal) {
             LazyHStack(spacing: 12) {
-                ForEach(Array(stories.enumerated()), id: \.1.id) { (idx, item) in
+                ForEach(Array(storyGroups.enumerated()), id: \.1.id) { (gi, group) in
                     StoryCardView(
-                        title: item.title,
-                        imageName: item.imageName,
-                        isViewed: viewedStore.isViewed(item.id)
+                        title: group.title,
+                        imageName: group.avatar,
+                        isViewed: !viewedStore.hasUnviewed(in: group)
                     )
-                    .id(item.id)
+                    .id(group.id)
                     .onTapGesture {
-                        selectedStoryIndex = idx
+                        selectedGroupIndex = gi
+                        selectedMediaIndex = viewedStore.firstUnviewedIndex(in: group) ?? 0
                         showStories = true
                     }
                 }
@@ -111,7 +115,7 @@ struct MainView: View {
         .scrollPosition(id: $activeStoryID)
         .frame(height: 140 + 8)
         .onAppear {
-            if activeStoryID == nil { activeStoryID = stories.first?.id }
+            if activeStoryID == nil { activeStoryID = storyGroups.first?.id }
         }
     }
     
@@ -178,9 +182,7 @@ struct MainView: View {
             guard
                 let fC = fromCity, let fS = fromStation,
                 let tC = toCity, let tS = toStation
-            else {
-                return
-            }
+            else { return }
             
             let summary = RouteSummary(fromCity: fC, fromStation: fS, toCity: tC, toStation: tS)
             router.path.append(.carriers(summary))
@@ -277,26 +279,6 @@ private struct RouteTextRow: View {
             }
         }
         .contentShape(Rectangle())
-    }
-}
-
-struct StoryBox: StoryDisplayable {
-    let id: UUID
-    let imageName: String
-    let title: String?
-    let subtitle: String?
-}
-
-extension Array where Element == StoryItem {
-    var asDisplayableBoxes: [StoryBox] {
-        map { item in
-            StoryBox(
-                id: item.id,
-                imageName: item.imageName,
-                title: item.title,
-                subtitle: nil
-            )
-        }
     }
 }
 

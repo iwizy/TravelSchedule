@@ -13,33 +13,6 @@ public protocol StoryDisplayable {
     var subtitle: String? { get }
 }
 
-private struct StorySegmentBar: View {
-    enum State { case past, current, future }
-    let state: State
-    let progress: CGFloat
-    
-    var body: some View {
-        GeometryReader { geo in
-            ZStack(alignment: .leading) {
-                Capsule().fill(Color.ypWhiteUniversal)
-                
-                switch state {
-                case .past:
-                    Capsule().fill(Color.ypBlueUniversal)
-                        .frame(width: geo.size.width)
-                case .current:
-                    Capsule().fill(Color.ypBlueUniversal)
-                        .frame(width: geo.size.width * max(0, min(1, progress)))
-                case .future:
-                    EmptyView()
-                }
-            }
-        }
-        .frame(height: 6)
-        .accessibilityHidden(true)
-    }
-}
-
 struct StoriesFullScreenView<Item: StoryDisplayable>: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var viewedStore: StoriesViewedStore
@@ -75,8 +48,8 @@ struct StoriesFullScreenView<Item: StoryDisplayable>: View {
                             .resizable()
                             .scaledToFill()
                             .ignoresSafeArea()
-
-                        .ignoresSafeArea()
+                        
+                            .ignoresSafeArea()
                         
                         VStack(alignment: .leading, spacing: 16) {
                             Spacer()
@@ -85,6 +58,9 @@ struct StoriesFullScreenView<Item: StoryDisplayable>: View {
                                     .font(.system(size: 34, weight: .bold))
                                     .foregroundStyle(.ypWhiteUniversal)
                                     .lineLimit(2)
+                                    .multilineTextAlignment(.leading)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
                                     .accessibilityAddTraits(.isHeader)
                             }
                             if let s = items[i].subtitle, !s.isEmpty {
@@ -92,9 +68,12 @@ struct StoriesFullScreenView<Item: StoryDisplayable>: View {
                                     .font(.system(size: 20, weight: .regular))
                                     .foregroundStyle(.ypWhiteUniversal)
                                     .lineLimit(3)
+                                    .multilineTextAlignment(.leading)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
                             }
                         }
-                        .frame(maxWidth: .infinity)
+                        .frame(maxWidth: .infinity, alignment: .leading) 
                         .padding(.horizontal, 16)
                         .padding(.bottom, 40)
                     }
@@ -150,11 +129,13 @@ struct StoriesFullScreenView<Item: StoryDisplayable>: View {
         .ignoresSafeArea(edges: [.horizontal])
         
         .onAppear {
-            viewedStore.markViewed(items[index].id)
+            viewedStore.markViewed(media: items[index].id)
             startTimerIfNeeded()
         }
-        .onChange(of: index) { new in
-            viewedStore.markRangeViewed(ids: items.map(\.id), through: new)
+        .onChange(of: index) {
+            for id in items.prefix(index + 1).map(\.id) {
+                viewedStore.markViewed(media: id)
+            }
             resetTimer()
         }
         .onDisappear { timer?.invalidate() }

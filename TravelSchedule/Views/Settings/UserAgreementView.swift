@@ -2,8 +2,7 @@
 //  UserAgreementView.swift
 //  TravelSchedule
 //
-//  Created by Alexander Agafonov on 24.09.2025.
-//
+//  Эвран отображения соглашения
 
 import SwiftUI
 
@@ -16,7 +15,7 @@ struct UserAgreementView: View {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 16) {
                     ForEach(blocks.indices, id: \.self) { i in
-                        AgreementMarkdownBlockView(block: blocks[i])  обновлён ниже
+                        AgreementMarkdownBlockView(block: blocks[i])
                     }
                 }
                 .padding(24)
@@ -58,24 +57,24 @@ private struct AgreementMarkdownBlockView: View {
                 .font(.system(size: 28, weight: .bold))
                 .foregroundStyle(.ypBlack)
                 .padding(.bottom, 4)
-
+            
         case .h2(let inlines):
             Text(MarkdownMini.attributed(from: inlines))
                 .font(.system(size: 22, weight: .semibold))
                 .foregroundStyle(.ypBlack)
                 .padding(.bottom, 2)
-
+            
         case .h3(let inlines):
             Text(MarkdownMini.attributed(from: inlines))
                 .font(.system(size: 18, weight: .semibold))
                 .foregroundStyle(.ypBlack)
-
+            
         case .paragraph(let inlines):
             Text(MarkdownMini.attributed(from: inlines))
                 .font(.system(size: 15))
                 .foregroundStyle(.ypBlack)
                 .lineSpacing(2)
-
+            
         case .list(let items):
             VStack(alignment: .leading, spacing: 8) {
                 ForEach(items.indices, id: \.self) { i in
@@ -95,22 +94,22 @@ private struct AgreementMarkdownBlockView: View {
 #Preview {
     let md = """
     # ДОГОВОР-ОФЕРТА
-
+    
     _на оказание образовательных услуг_ и **информационных** сервисов.
-
+    
     ## 1. Общие положения
     Настоящий документ является официальным предложением. Обращения: support@example.com или [написать нам](mailto:support@example.com).
-
+    
     ### 1.1 Термины
     - **Пользователь** — лицо, использующее приложение.
     - _Исполнитель_ — правообладатель сервиса.
     - Сайт: [travel.example](https://travel.example)
-
+    
     ## 2. Права и обязанности
     - Исполнитель обязуется оказывать услуги.
     - Пользователь обязуется соблюдать правила.
     """
-
+    
     let blocks = MarkdownMini.parse(md)
     
     return NavigationStack {

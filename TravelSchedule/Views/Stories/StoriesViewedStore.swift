@@ -7,24 +7,39 @@
 import SwiftUI
 
 final class StoriesViewedStore: ObservableObject {
-    @AppStorage("stories.viewed.ids") private var viewedCSV: String = ""
-    @Published private(set) var viewed: Set<UUID> = []
+    @Published private(set) var viewedMedia = Set<UUID>()
+    @Published private(set) var lastIndexByGroup: [UUID:Int] = [:]
 
-    init() {
-        viewed = Set(viewedCSV.split(separator: ",").compactMap { UUID(uuidString: String($0)) })
+    func isViewed(media id: UUID) -> Bool { viewedMedia.contains(id) }
+
+    func hasUnviewed(in group: StoryGroup) -> Bool {
+        group.items.contains { !viewedMedia.contains($0.id) }
     }
 
-    func isViewed(_ id: UUID) -> Bool { viewed.contains(id) }
-
-    func markViewed(_ id: UUID) {
-        guard !viewed.contains(id) else { return }
-        viewed.insert(id)
-        viewedCSV = viewed.map(\.uuidString).joined(separator: ",")
-        objectWillChange.send()
+    func firstUnviewedIndex(in group: StoryGroup) -> Int? {
+        group.items.firstIndex { !viewedMedia.contains($0.id) }
     }
 
-    func markRangeViewed(ids: [UUID], through index: Int) {
-        guard ids.indices.contains(index) else { return }
-        for i in 0...index { markViewed(ids[i]) }
+    func markViewed(media id: UUID) { viewedMedia.insert(id); persist() }
+    func setLastIndex(groupID: UUID, index: Int) { lastIndexByGroup[groupID] = index; persist() }
+
+    private let viewedKey = "stories.viewedMedia.v2"
+    private let lastIdxKey = "stories.lastIndexByGroup.v2"
+
+    init() { restore() }
+
+    private func persist() {
+        UserDefaults.standard.set(viewedMedia.map(\.uuidString), forKey: viewedKey)
+        let dict = Dictionary(uniqueKeysWithValues: lastIndexByGroup.map { ($0.key.uuidString, $0.value) })
+        UserDefaults.standard.set(dict, forKey: lastIdxKey)
+    }
+
+    private func restore() {
+        if let ids = UserDefaults.standard.array(forKey: viewedKey) as? [String] {
+            viewedMedia = Set(ids.compactMap(UUID.init(uuidString:)))
+        }
+        if let dict = UserDefaults.standard.dictionary(forKey: lastIdxKey) as? [String:Int] {
+            lastIndexByGroup = Dictionary(uniqueKeysWithValues: dict.compactMap { (UUID(uuidString: $0.key), $0.value) as? (UUID, Int) })
+        }
     }
 }
