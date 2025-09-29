@@ -10,20 +10,20 @@ struct StoriesPlayerView: View {
     let groups: [StoryGroup]
     @State private var groupIndex: Int
     @State private var mediaIndex: Int
-
+    
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var store: StoriesViewedStore
-
+    
     init(groups: [StoryGroup], startGroupIndex: Int, startMediaIndex: Int) {
         self.groups = groups
         _groupIndex = State(initialValue: startGroupIndex)
         _mediaIndex = State(initialValue: startMediaIndex)
     }
-
+    
     var body: some View {
         ZStack {
             Color.ypBlackUniversal.ignoresSafeArea()
-
+            
             TabView(selection: $groupIndex) {
                 ForEach(groups.indices, id: \.self) { gi in
                     let group = groups[gi]

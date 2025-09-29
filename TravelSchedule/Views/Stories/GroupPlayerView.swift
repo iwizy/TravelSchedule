@@ -13,12 +13,12 @@ struct GroupPlayerView: View {
     let onFinishGroup: () -> Void
     let onUpdateIndex: (Int) -> Void
     let onViewed: (UUID) -> Void
-
+    
     @State private var index: Int
     @State private var progress: CGFloat = 0
     @State private var timer: Timer?
     @State private var isPaused = false
-
+    
     init(group: StoryGroup,
          startIndex: Int,
          onClose: @escaping () -> Void,
@@ -33,23 +33,23 @@ struct GroupPlayerView: View {
         self.onViewed = onViewed
         _index = State(initialValue: startIndex)
     }
-
+    
     private var medias: [StoryMedia] { group.items }
-
+    
     var body: some View {
         ZStack {
             Image(medias[index].imageName)
                 .resizable()
                 .scaledToFill()
                 .ignoresSafeArea()
-
+            
             LinearGradient(colors: [.clear, .black.opacity(0.65)],
                            startPoint: .center, endPoint: .bottom)
             .ignoresSafeArea()
-
+            
             VStack(alignment: .leading, spacing: 8) {
                 Spacer(minLength: 0)
-
+                
                 if let t = medias[index].title, !t.isEmpty {
                     Text(t)
                         .font(.system(size: 34, weight: .heavy))
@@ -60,7 +60,7 @@ struct GroupPlayerView: View {
                         .fixedSize(horizontal: false, vertical: true)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
-
+                
                 if let s = medias[index].subtitle, !s.isEmpty {
                     Text(s)
                         .font(.title3)
@@ -75,7 +75,7 @@ struct GroupPlayerView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 20)
             .padding(.bottom, 40)
-
+            
             VStack {
                 HStack(spacing: 6) {
                     ForEach(medias.indices, id: \.self) { i in
@@ -86,13 +86,13 @@ struct GroupPlayerView: View {
                 .padding(.top, 28)
                 Spacer()
             }
-
+            
             HStack(spacing: 0) {
                 Color.clear.contentShape(Rectangle()).onTapGesture { previous() }
                 Color.clear.contentShape(Rectangle()).onTapGesture { next() }
             }
             .ignoresSafeArea()
-
+            
             VStack {
                 HStack {
                     Spacer()
@@ -129,15 +129,15 @@ struct GroupPlayerView: View {
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in pause() }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in resume() }
     }
-
+    
     // MARK: - Навигация и прогресс
-
+    
     private func segmentState(for i: Int) -> StorySegmentBar.State {
         if i < index { return .past }
         if i == index { return .current }
         return .future
     }
-
+    
     private func next() {
         if index < medias.count - 1 {
             index += 1
@@ -145,14 +145,14 @@ struct GroupPlayerView: View {
             onFinishGroup()
         }
     }
-
+    
     private func previous() {
         if index > 0 {
             index -= 1
         } else {
         }
     }
-
+    
     private func startTimer() {
         progress = 0
         timer?.invalidate()
@@ -166,7 +166,7 @@ struct GroupPlayerView: View {
             }
         }
     }
-
+    
     private func resetTimer() { startTimer() }
     private func pause() { isPaused = true }
     private func resume() { isPaused = false }

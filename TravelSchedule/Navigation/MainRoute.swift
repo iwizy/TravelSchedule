@@ -16,7 +16,7 @@ struct RouteSummary: Hashable {
     let fromStation: String
     let toCity: String
     let toStation: String
-
+    
     var title: String {
         "\(fromCity) (\(fromStation)) → \(toCity) (\(toStation))"
     }

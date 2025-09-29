@@ -20,11 +20,11 @@ public struct FiltersSelection: Hashable {
     }
     public var timeBands: Set<TimeBand> = []
     public var transfers: Bool? = nil
-
+    
     public init(timeBands: Set<TimeBand> = [], transfers: Bool? = nil) {
         self.timeBands = timeBands
         self.transfers = transfers
     }
-
+    
     public var canApply: Bool { !timeBands.isEmpty && transfers != nil }
 }

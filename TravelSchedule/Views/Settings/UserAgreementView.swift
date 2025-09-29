@@ -2,7 +2,7 @@
 //  UserAgreementView.swift
 //  TravelSchedule
 //
-//  Эвран отображения соглашения
+//  Экран отображения соглашения
 
 import SwiftUI
 

@@ -10,7 +10,7 @@ struct StorySegmentBar: View {
     enum State { case past, current, future }
     let state: State
     let progress: CGFloat
-
+    
     var body: some View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {

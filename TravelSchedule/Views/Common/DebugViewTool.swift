@@ -18,7 +18,7 @@ public extension View {
     func debugBorder(_ color: Color = .red, width: CGFloat = 1) -> some View {
         overlay(Rectangle().stroke(color, lineWidth: width))
     }
-
+    
     func debugBackground(_ color: Color = .yellow.opacity(0.2)) -> some View {
         background(color)
     }
@@ -27,7 +27,7 @@ public extension View {
 
 private struct DebugSizeModifier: ViewModifier {
     let label: String
-
+    
     func body(content: Content) -> some View {
         content.background(
             GeometryReader { proxy in
@@ -51,7 +51,7 @@ private struct DebugSizeModifier: ViewModifier {
             }
         )
     }
-
+    
     private func log(proxy: GeometryProxy, reason: String) {
         let size = proxy.size
         let global = proxy.frame(in: .global)
@@ -72,7 +72,7 @@ public extension View {
 
 private struct DebugOverlayModifier: ViewModifier {
     let label: String
-
+    
     func body(content: Content) -> some View {
         content.overlay(
             GeometryReader { proxy in
@@ -90,7 +90,7 @@ private struct DebugOverlayModifier: ViewModifier {
             }
         )
     }
-
+    
     private func overlayText(size: CGSize) -> String {
         var parts: [String] = []
         if !label.isEmpty { parts.append(label) }

@@ -2,16 +2,15 @@
 //  AgreementBlockView.swift
 //  TravelSchedule
 //
-//  Created by Alexander Agafonov on 26.09.2025.
-//
+//  Блок просмотра соглашения
 
 import SwiftUI
 
 public struct AgreementBlockView: View {
     public let block: MDBlock
-
+    
     public init(block: MDBlock) { self.block = block }
-
+    
     private func inlineText(_ inlines: [MDInline]) -> Text {
         inlines.reduce(Text("")) { acc, inline in
             switch inline {
@@ -26,29 +25,29 @@ public struct AgreementBlockView: View {
             }
         }
     }
-
+    
     public var body: some View {
         switch block {
         case .h1(let inlines):
             inlineText(inlines)
                 .font(.title.bold())
                 .multilineTextAlignment(.leading)
-
+            
         case .h2(let inlines):
             inlineText(inlines)
                 .font(.title3.bold())
                 .multilineTextAlignment(.leading)
-
+            
         case .h3(let inlines):
             inlineText(inlines)
                 .font(.headline.bold())
                 .multilineTextAlignment(.leading)
-
+            
         case .paragraph(let inlines):
             inlineText(inlines)
                 .font(.body)
                 .lineSpacing(2)
-
+            
         case .list(let items):
             VStack(alignment: .leading, spacing: 8) {
                 ForEach(items.indices, id: \.self) { i in
