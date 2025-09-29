@@ -31,13 +31,23 @@ private struct DebugSizeModifier: ViewModifier {
     func body(content: Content) -> some View {
         content.background(
             GeometryReader { proxy in
-                Color.clear
-                    .onAppear {
-                        log(proxy: proxy, reason: "appear")
-                    }
-                    .onChange(of: proxy.size) { _ in
-                        log(proxy: proxy, reason: "size change")
-                    }
+                if #available(iOS 17.0, *) {
+                    Color.clear
+                        .onAppear {
+                            log(proxy: proxy, reason: "appear")
+                        }
+                        .onChange(of: proxy.size) {
+                            log(proxy: proxy, reason: "size change")
+                        }
+                } else {
+                    Color.clear
+                        .onAppear {
+                            log(proxy: proxy, reason: "appear")
+                        }
+                        .onChange(of: proxy.size) { _ in
+                            log(proxy: proxy, reason: "size change")
+                        }
+                }
             }
         )
     }
@@ -96,3 +106,4 @@ public extension View {
 }
 
 #endif
+

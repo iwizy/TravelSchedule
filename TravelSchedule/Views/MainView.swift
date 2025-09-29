@@ -9,19 +9,20 @@ import SwiftUI
 struct MainView: View {
     @EnvironmentObject var router: MainRouter
     @State private var activeStoryID: UUID?
+    
     @State private var fromCity: String?
     @State private var fromStation: String?
     @State private var toCity: String?
     @State private var toStation: String?
-    @StateObject private var carriersFilter = CarriersFilterModel()
     
-    private let stories: [StoryItem] = [
-        .init(title: "Text Text Text Text Text Text Text", imageName: "item1"),
-        .init(title: "Text Text Text Text Text Text Text", imageName: "item2"),
-        .init(title: "Text Text Text Text Text Text Text", imageName: "item3"),
-        .init(title: "Text Text Text Text Text Text Text", imageName: "item4"),
-        .init(title: "Text Text Text Text Text Text Text", imageName: "item5")
-    ]
+    @StateObject private var carriersFilter = CarriersFilterModel()
+    @StateObject private var viewedStore = StoriesViewedStore()
+    
+    @State private var showStories = false
+    @State private var selectedGroupIndex: Int = 0
+    @State private var selectedMediaIndex: Int = 0
+    
+    private let storyGroups: [StoryGroup] = StoriesMocks.groups
     
     var body: some View {
         VStack(spacing: 0) {
@@ -45,50 +46,64 @@ struct MainView: View {
         .toolbar { ToolbarItem(placement: .principal) { EmptyView() } }
         .background(.ypWhite)
         
+        .fullScreenCover(isPresented: $showStories) {
+            StoriesPlayerView(
+                groups: storyGroups,
+                startGroupIndex: selectedGroupIndex,
+                startMediaIndex: selectedMediaIndex
+            )
+            .environmentObject(viewedStore)
+        }
+        
         .navigationDestination(for: MainRoute.self) { route in
             switch route {
-                case .city(let field):
-                    CityPickerView(field: field)
-
-                case .station(let city, let field):
-                    StationPickerView(city: city) { station in
-                        switch field {
-                        case .from:
-                            fromCity = city.name
-                            fromStation = station.name
-                        case .to:
-                            toCity = city.name
-                            toStation = station.name
-                        }
-                        router.path = [] // возвращаемся на главный после выбора
+            case .city(let field):
+                CityPickerView(field: field)
+                
+            case .station(let city, let field):
+                StationPickerView(city: city) { station in
+                    switch field {
+                    case .from:
+                        fromCity = city.name
+                        fromStation = station.name
+                    case .to:
+                        toCity = city.name
+                        toStation = station.name
                     }
-
+                    router.path = []
+                }
+                
             case .carriers(let summary):
                 CarriersListView(summary: summary)
-                    .environmentObject(carriersFilter)   // ← пробрасываем модель фильтров
-
+                    .environmentObject(carriersFilter)
+                
+            case .carrierInfo(let carrier):
+                CarrierInfoView(carrier: carrier)
+                
             case .filters:
                 FiltersView { newFilters in
-                    carriersFilter.appliedFilters = newFilters  
+                    carriersFilter.appliedFilters = newFilters
                     router.path.removeLast()
                 }
                 .environmentObject(carriersFilter)
-                }
+            }
         }
     }
     
     private var storiesCarousel: some View {
         ScrollView(.horizontal) {
             LazyHStack(spacing: 12) {
-                ForEach(stories) { item in
+                ForEach(Array(storyGroups.enumerated()), id: \.1.id) { (gi, group) in
                     StoryCardView(
-                        title: item.title,
-                        imageName: item.imageName,
-                        isActive: item.id == activeStoryID
+                        title: group.title,
+                        imageName: group.avatar,
+                        isViewed: !viewedStore.hasUnviewed(in: group)
                     )
-                    .id(item.id)
+                    .id(group.id)
                     .onTapGesture {
-                        withAnimation(.snappy) { activeStoryID = item.id }
+                        selectedGroupIndex = gi
+                        selectedMediaIndex = viewedStore.firstUnviewedIndex(in: group) ?? 0
+                        showStories = true
                     }
                 }
             }
@@ -100,7 +115,7 @@ struct MainView: View {
         .scrollPosition(id: $activeStoryID)
         .frame(height: 140 + 8)
         .onAppear {
-            if activeStoryID == nil { activeStoryID = stories.first?.id }
+            if activeStoryID == nil { activeStoryID = storyGroups.first?.id }
         }
     }
     
@@ -167,10 +182,8 @@ struct MainView: View {
             guard
                 let fC = fromCity, let fS = fromStation,
                 let tC = toCity, let tS = toStation
-            else {
-                return
-            }
-
+            else { return }
+            
             let summary = RouteSummary(fromCity: fC, fromStation: fS, toCity: tC, toStation: tS)
             router.path.append(.carriers(summary))
         } label: {
@@ -209,10 +222,10 @@ struct MainView: View {
     }
 }
 
-private struct StoryCardView: View {
+struct StoryCardView: View {
     let title: String
     let imageName: String
-    let isActive: Bool
+    let isViewed: Bool
     
     var body: some View {
         ZStack(alignment: .bottomLeading) {
@@ -222,9 +235,10 @@ private struct StoryCardView: View {
                 .frame(width: 92, height: 140)
                 .clipped()
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .opacity(isViewed ? 0.5 : 1.0)
             
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(isActive ? Color.ypBlueUniversal : Color.clear, lineWidth: 4)
+                .stroke(isViewed ? Color.clear : Color.ypBlueUniversal, lineWidth: 4)
                 .frame(width: 92, height: 140)
             
             Text(title)
@@ -236,7 +250,6 @@ private struct StoryCardView: View {
                 .padding(.vertical, 12)
         }
         .frame(width: 92, height: 140)
-        .opacity(isActive ? 1.0 : 0.55)
     }
 }
 

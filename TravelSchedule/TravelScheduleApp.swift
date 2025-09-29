@@ -9,6 +9,7 @@ import SwiftUI
 
 @main
 struct TravelScheduleApp: App {
+    @StateObject private var themeManager = ThemeManager()
     init() {
         let appearance = UITabBarAppearance()
         appearance.configureWithOpaqueBackground()
@@ -21,6 +22,12 @@ struct TravelScheduleApp: App {
     var body: some Scene {
         WindowGroup {
             RootTabsView()
+                .environmentObject(themeManager)
+                .onAppear {
+                    let isDark = UITraitCollection.current.userInterfaceStyle == .dark
+                    themeManager.bindToSystem(isDark ? .dark : .light)
+                }
+                .preferredColorScheme(themeManager.effectiveScheme)
         }
     }
 }
