@@ -40,6 +40,14 @@ struct StoriesPlayerView: View {
                         },
                         onViewed: { mid in
                             store.markViewed(media: mid)
+                        },
+                        onRequestPrevGroup: {
+                            if gi > 0 {
+                                groupIndex = gi - 1
+                                mediaIndex = max(0, groups[gi - 1].items.count - 1)
+                            } else {
+                                dismiss()
+                            }
                         }
                     )
                     .tag(gi)

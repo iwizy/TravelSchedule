@@ -13,6 +13,7 @@ struct GroupPlayerView: View {
     let onFinishGroup: () -> Void
     let onUpdateIndex: (Int) -> Void
     let onViewed: (UUID) -> Void
+    let onRequestPrevGroup: () -> Void
     
     @State private var index: Int
     @State private var progress: CGFloat = 0
@@ -24,17 +25,35 @@ struct GroupPlayerView: View {
          onClose: @escaping () -> Void,
          onFinishGroup: @escaping () -> Void,
          onUpdateIndex: @escaping (Int) -> Void,
-         onViewed: @escaping (UUID) -> Void) {
+         onViewed: @escaping (UUID) -> Void,
+         onRequestPrevGroup: @escaping () -> Void) {
         self.group = group
         self.startIndex = startIndex
         self.onClose = onClose
         self.onFinishGroup = onFinishGroup
         self.onUpdateIndex = onUpdateIndex
         self.onViewed = onViewed
+        self.onRequestPrevGroup = onRequestPrevGroup
         _index = State(initialValue: startIndex)
     }
     
     private var medias: [StoryMedia] { group.items }
+    
+    private var horizontalSwipe: some Gesture {
+        DragGesture(minimumDistance: 24, coordinateSpace: .local)
+            .onEnded { value in
+                let dx = value.translation.width
+                if dx < -24 {
+                    next()
+                } else if dx > 24 {
+                    if index > 0 {
+                        previous()
+                    } else {
+                        onRequestPrevGroup()
+                    }
+                }
+            }
+    }
     
     var body: some View {
         ZStack {
@@ -113,9 +132,12 @@ struct GroupPlayerView: View {
         .contentShape(RoundedRectangle(cornerRadius: 40, style: .continuous))
         .padding(.top, 8)
         .ignoresSafeArea(edges: [.horizontal, .bottom])
-        .gesture(LongPressGesture(minimumDuration: 0.15)
-            .onChanged { _ in pause() }
-            .onEnded { _ in resume() })
+        .highPriorityGesture(horizontalSwipe)
+        .simultaneousGesture(
+            LongPressGesture(minimumDuration: 0.15)
+                .onChanged { _ in pause() }
+                .onEnded { _ in resume() }
+        )
         .onAppear {
             onViewed(medias[index].id)
             startTimer()
@@ -171,4 +193,3 @@ struct GroupPlayerView: View {
     private func pause() { isPaused = true }
     private func resume() { isPaused = false }
 }
-
