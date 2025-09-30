@@ -38,26 +38,26 @@ public enum MarkdownMini {
         
         for inline in inlines {
             switch inline {
-            case .text(let s):
-                var segment = AttributedString(s)
+            case .text(let string):
+                var segment = AttributedString(string)
                 if let rx = emailRegex {
-                    let matches = rx.matches(in: s, options: [], range: NSRange(location: 0, length: (s as NSString).length))
+                    let matches = rx.matches(in: string, options: [], range: NSRange(location: 0, length: (string as NSString).length))
                     for m in matches {
-                        if let rStr = Range(m.range, in: s), let rAttr = Range(rStr, in: segment) {
-                            let email = String(s[rStr])
+                        if let rStr = Range(m.range, in: string), let rAttr = Range(rStr, in: segment) {
+                            let email = String(string[rStr])
                             segment[rAttr].link = URL(string: "mailto:\(email)")
                         }
                     }
                 }
                 result.append(segment)
                 
-            case .bold(let s):
-                var segment = AttributedString(s)
+            case .bold(let string):
+                var segment = AttributedString(string)
                 segment.inlinePresentationIntent = .stronglyEmphasized
                 result.append(segment)
                 
-            case .italic(let s):
-                var segment = AttributedString(s)
+            case .italic(let string):
+                var segment = AttributedString(string)
                 segment.inlinePresentationIntent = .emphasized
                 result.append(segment)
                 
@@ -73,8 +73,8 @@ public enum MarkdownMini {
         return result
     }
     
-    public static func normalize(_ s: String) -> String {
-        var t = s.replacingOccurrences(of: "\r\n", with: "\n")
+    public static func normalize(_ string: String) -> String {
+        var t = string.replacingOccurrences(of: "\r\n", with: "\n")
             .replacingOccurrences(of: "\r", with: "\n")
             .replacingOccurrences(of: "\t", with: "    ")
         t = t.replacingOccurrences(of: "\u{00A0}", with: " ")
@@ -117,8 +117,8 @@ public enum MarkdownMini {
         }
     }
     
-    private static func parseInlines(_ s: String) -> [MDInline] {
-        if s.isEmpty { return [] }
+    private static func parseInlines(_ string: String) -> [MDInline] {
+        if string.isEmpty { return [] }
         
         let patterns: [(type: InlineType, regex: NSRegularExpression)] = [
             (.link,   try! NSRegularExpression(pattern: #"\[([^\]]+)\]\(([^)]+)\)"#, options: [])),
@@ -127,33 +127,33 @@ public enum MarkdownMini {
         ]
         
         var result: [MDInline] = []
-        var index = s.startIndex
+        var index = string.startIndex
         
         func appendTextIfNeeded(upTo nextIdx: String.Index) {
             if index < nextIdx {
-                let chunk = String(s[index..<nextIdx])
+                let chunk = String(string[index..<nextIdx])
                 if !chunk.isEmpty { result.append(.text(chunk)) }
             }
         }
         
-        while index < s.endIndex {
+        while index < string.endIndex {
             var nearest: (type: InlineType, match: NSTextCheckingResult, range: Range<String.Index>)?
             
             for (type, rx) in patterns {
-                if let m = rx.firstMatch(in: s, options: [], range: NSRange(index..<s.endIndex, in: s)),
-                   let r = Range(m.range, in: s) {
+                if let match = rx.firstMatch(in: string, options: [], range: NSRange(index..<string.endIndex, in: string)),
+                   let range = Range(match.range, in: string) {
                     if let current = nearest {
-                        if r.lowerBound < current.range.lowerBound {
-                            nearest = (type, m, r)
+                        if range.lowerBound < current.range.lowerBound {
+                            nearest = (type, match, range)
                         }
                     } else {
-                        nearest = (type, m, r)
+                        nearest = (type, match, range)
                     }
                 }
             }
             
             guard let found = nearest else {
-                appendTextIfNeeded(upTo: s.endIndex)
+                appendTextIfNeeded(upTo: string.endIndex)
                 break
             }
             
@@ -161,19 +161,19 @@ public enum MarkdownMini {
             
             switch found.type {
             case .link:
-                let textRange = Range(found.match.range(at: 1), in: s)!
-                let urlRange  = Range(found.match.range(at: 2), in: s)!
-                let text = String(s[textRange])
-                let url  = String(s[urlRange])
+                let textRange = Range(found.match.range(at: 1), in: string)!
+                let urlRange  = Range(found.match.range(at: 2), in: string)!
+                let text = String(string[textRange])
+                let url  = String(string[urlRange])
                 result.append(.link(text: text, url: url))
                 
             case .bold:
-                let inner = Range(found.match.range(at: 1), in: s)!
-                result.append(.bold(String(s[inner])))
+                let inner = Range(found.match.range(at: 1), in: string)!
+                result.append(.bold(String(string[inner])))
                 
             case .italic:
-                let inner = Range(found.match.range(at: 1), in: s)!
-                result.append(.italic(String(s[inner])))
+                let inner = Range(found.match.range(at: 1), in: string)!
+                result.append(.italic(String(string[inner])))
             }
             
             index = found.range.upperBound
