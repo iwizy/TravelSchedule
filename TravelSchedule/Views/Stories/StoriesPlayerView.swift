@@ -29,7 +29,7 @@ struct StoriesPlayerView: View {
                     let group = groups[gi]
                     GroupPlayerView(
                         group: group,
-                        startIndex: gi == groupIndex ? mediaIndex : (store.lastIndexByGroup[group.id] ?? 0),
+                        startIndex: gi == groupIndex ? mediaIndex : 0,
                         onClose: { dismiss() },
                         onFinishGroup: {
                             if gi < groups.count - 1 { groupIndex = gi + 1 } else { dismiss() }
