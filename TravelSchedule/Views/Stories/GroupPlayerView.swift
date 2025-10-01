@@ -177,6 +177,7 @@ struct GroupPlayerView: View {
     
     private func startTimer() {
         progress = 0
+        isPaused = false
         timer?.invalidate()
         let dur = max(0.2, medias[index].duration)
         timer = Timer.scheduledTimer(withTimeInterval: 0.02, repeats: true) { t in
