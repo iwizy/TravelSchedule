@@ -13,27 +13,30 @@ struct GroupPlayerView: View {
     let onFinishGroup: () -> Void
     let onUpdateIndex: (Int) -> Void
     let onViewed: (UUID) -> Void
-    let onRequestPrevGroup: () -> Void
+    
+    let onPrevGroup: () -> Void
     
     @State private var index: Int
     @State private var progress: CGFloat = 0
     @State private var timer: Timer?
     @State private var isPaused = false
     
-    init(group: StoryGroup,
-         startIndex: Int,
-         onClose: @escaping () -> Void,
-         onFinishGroup: @escaping () -> Void,
-         onUpdateIndex: @escaping (Int) -> Void,
-         onViewed: @escaping (UUID) -> Void,
-         onRequestPrevGroup: @escaping () -> Void) {
+    init(
+        group: StoryGroup,
+        startIndex: Int,
+        onClose: @escaping () -> Void,
+        onFinishGroup: @escaping () -> Void,
+        onPrevGroup: @escaping () -> Void,
+        onUpdateIndex: @escaping (Int) -> Void,
+        onViewed: @escaping (UUID) -> Void
+    ) {
         self.group = group
         self.startIndex = startIndex
         self.onClose = onClose
         self.onFinishGroup = onFinishGroup
+        self.onPrevGroup = onPrevGroup
         self.onUpdateIndex = onUpdateIndex
         self.onViewed = onViewed
-        self.onRequestPrevGroup = onRequestPrevGroup
         _index = State(initialValue: startIndex)
     }
     
@@ -49,7 +52,7 @@ struct GroupPlayerView: View {
                     if index > 0 {
                         previous()
                     } else {
-                        onRequestPrevGroup()
+                        onPrevGroup()
                     }
                 }
             }
@@ -107,8 +110,12 @@ struct GroupPlayerView: View {
             }
             
             HStack(spacing: 0) {
-                Color.clear.contentShape(Rectangle()).onTapGesture { previous() }
-                Color.clear.contentShape(Rectangle()).onTapGesture { next() }
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture { previous() }
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture { next() }
             }
             .ignoresSafeArea()
             
@@ -172,12 +179,13 @@ struct GroupPlayerView: View {
         if index > 0 {
             index -= 1
         } else {
+            onPrevGroup()
         }
     }
     
     private func startTimer() {
         progress = 0
-        isPaused = false
+        isPaused = false        
         timer?.invalidate()
         let dur = max(0.2, medias[index].duration)
         timer = Timer.scheduledTimer(withTimeInterval: 0.02, repeats: true) { t in

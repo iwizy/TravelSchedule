@@ -32,7 +32,18 @@ struct StoriesPlayerView: View {
                         startIndex: gi == groupIndex ? mediaIndex : 0,
                         onClose: { dismiss() },
                         onFinishGroup: {
-                            if gi < groups.count - 1 { groupIndex = gi + 1 } else { dismiss() }
+                            if gi < groups.count - 1 {
+                                groupIndex = gi + 1
+                            } else {
+                                dismiss()
+                            }
+                        },
+                        onPrevGroup: {
+                            if gi > 0 {
+                                groupIndex = gi - 1
+                            } else {
+                                dismiss()
+                            }
                         },
                         onUpdateIndex: { idx in
                             store.setLastIndex(groupID: group.id, index: idx)
@@ -40,14 +51,6 @@ struct StoriesPlayerView: View {
                         },
                         onViewed: { mid in
                             store.markViewed(media: mid)
-                        },
-                        onRequestPrevGroup: {
-                            if gi > 0 {
-                                groupIndex = gi - 1
-                                mediaIndex = max(0, groups[gi - 1].items.count - 1)
-                            } else {
-                                dismiss()
-                            }
                         }
                     )
                     .tag(gi)
