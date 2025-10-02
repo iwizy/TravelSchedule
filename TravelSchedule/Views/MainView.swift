@@ -18,9 +18,12 @@ struct MainView: View {
     @StateObject private var carriersFilter = CarriersFilterModel()
     @StateObject private var viewedStore = StoriesViewedStore()
     
-    @State private var showStories = false
-    @State private var selectedGroupIndex: Int = 0
-    @State private var selectedMediaIndex: Int = 0
+    private struct StoriesOpenContext: Identifiable {
+        let id = UUID()
+        let groupIndex: Int
+        let mediaIndex: Int
+    }
+    @State private var storiesOpen: StoriesOpenContext?
     
     private let storyGroups: [StoryGroup] = StoriesMocks.groups
     
@@ -46,11 +49,11 @@ struct MainView: View {
         .toolbar { ToolbarItem(placement: .principal) { EmptyView() } }
         .background(.ypWhite)
         
-        .fullScreenCover(isPresented: $showStories) {
+        .fullScreenCover(item: $storiesOpen) { ctx in
             StoriesPlayerView(
                 groups: storyGroups,
-                startGroupIndex: selectedGroupIndex,
-                startMediaIndex: selectedMediaIndex
+                startGroupIndex: ctx.groupIndex,
+                startMediaIndex: ctx.mediaIndex
             )
             .environmentObject(viewedStore)
         }
@@ -101,9 +104,8 @@ struct MainView: View {
                     )
                     .id(group.id)
                     .onTapGesture {
-                        selectedGroupIndex = gi
-                        selectedMediaIndex = viewedStore.firstUnviewedIndex(in: group) ?? 0
-                        showStories = true
+                        let mi = viewedStore.firstUnviewedIndex(in: group) ?? 0
+                        storiesOpen = StoriesOpenContext(groupIndex: gi, mediaIndex: mi)
                     }
                 }
             }

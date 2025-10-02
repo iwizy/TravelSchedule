@@ -10,7 +10,6 @@ struct StoriesPlayerView: View {
     let groups: [StoryGroup]
     @State private var groupIndex: Int
     @State private var mediaIndex: Int
-    
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var store: StoriesViewedStore
     
@@ -58,7 +57,8 @@ struct StoriesPlayerView: View {
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
         }
-        .onChange(of: groupIndex) { _, newGi in
+        .onChange(of: groupIndex) { oldGi, newGi in
+            guard newGi != oldGi else { return }
             let g = groups[newGi]
             mediaIndex = store.firstUnviewedIndex(in: g) ?? 0
         }
