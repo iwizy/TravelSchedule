@@ -12,43 +12,64 @@ final class CarriersListViewModel: ObservableObject {
             carrierName: "РЖД", logoName: "rzd_logo",
             dateText: "14 января", depart: "06:15", arrive: "12:05",
             durationText: "5 ч 50 м",
-            transferNote: nil
+            transferNote: nil,
+            email: "info@rzd.ru",
+            phoneE164: "+78007750000",
+            phoneDisplay: "8 800 775-00-00"
         ),
         CarrierOption(
             carrierName: "ФГК", logoName: "fgk_logo",
             dateText: "15 января", depart: "01:15", arrive: "09:00",
             durationText: "7 ч 45 м",
-            transferNote: "С пересадкой в Твери"
+            transferNote: "С пересадкой в Твери",
+            email: "info@railfgk.ru",
+            phoneE164: "+78002504777",
+            phoneDisplay: "8-800-250-4777"
         ),
         CarrierOption(
             carrierName: "Урал логистика", logoName: "ural_logo",
             dateText: "16 января", depart: "12:30", arrive: "21:00",
             durationText: "8 ч 30 м",
-            transferNote: nil
+            transferNote: nil,
+            email: "general@ulgroup.ru",
+            phoneE164: "+74957838383",
+            phoneDisplay: "+7 (495) 783-83-83"
         ),
         CarrierOption(
             carrierName: "РЖД", logoName: "rzd_logo",
             dateText: "17 января", depart: "22:30", arrive: "08:15",
             durationText: "9 ч 45 м",
-            transferNote: "С пересадкой в Костроме"
+            transferNote: "С пересадкой в Костроме",
+            email: "info@rzd.ru",
+            phoneE164: "+78007750000",
+            phoneDisplay: "8 800 775-00-00"
         ),
         CarrierOption(
             carrierName: "РЖД", logoName: "rzd_logo",
             dateText: "17 января", depart: "18:05", arrive: "23:15",
             durationText: "5 ч 10 м",
-            transferNote: nil
+            transferNote: nil,
+            email: "info@rzd.ru",
+            phoneE164: "+78007750000",
+            phoneDisplay: "8 800 775-00-00"
         ),
         CarrierOption(
             carrierName: "РЖД", logoName: "rzd_logo",
             dateText: "17 января", depart: "18:05", arrive: "23:15",
             durationText: "5 ч 10 м",
-            transferNote: nil
+            transferNote: nil,
+            email: "info@rzd.ru",
+            phoneE164: "+78007750000",
+            phoneDisplay: "8 800 775-00-00"
         ),
         CarrierOption(
             carrierName: "Урал логистика", logoName: "ural_logo",
             dateText: "16 января", depart: "12:30", arrive: "21:00",
             durationText: "8 ч 30 м",
-            transferNote: nil
+            transferNote: nil,
+            email: "general@ulgroup.ru",
+            phoneE164: "+74957838383",
+            phoneDisplay: "+7 (495) 783-83-83"
         )
     ]
 }
@@ -61,6 +82,7 @@ struct CarriersListView: View {
     @EnvironmentObject var router: MainRouter
     @EnvironmentObject var filters: CarriersFilterModel
     @StateObject private var vm = CarriersListViewModel()
+    
     
     private var filteredOptions: [CarrierOption] {
         guard let f = filters.appliedFilters else { return vm.options }
@@ -98,9 +120,15 @@ struct CarriersListView: View {
                 } else {
                     List {
                         ForEach(filteredOptions) { item in
-                            CarrierRow(option: item)
-                                .listRowSeparator(.hidden)
-                                .listRowInsets(.init(top: 0, leading: 16, bottom: 8, trailing: 16))
+                            Button {
+                                router.path.append(.carrierInfo(carrier(from: item)))
+                            } label: {
+                                CarrierRow(option: item)
+                                    .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                            }
+                            .buttonStyle(.plain)
+                            .listRowSeparator(.hidden)
+                            .listRowInsets(.init(top: 0, leading: 16, bottom: 8, trailing: 16))
                         }
                     }
                     .listStyle(.plain)
@@ -186,6 +214,17 @@ struct CarriersListView: View {
         let comps = hhmm.split(separator: ":")
         guard comps.count == 2, let h = Int(comps[0]) else { return nil }
         return h
+    }
+    
+    private func carrier(from option: CarrierOption) -> Carrier {
+        Carrier(
+            id: option.logoName,
+            name: option.carrierName,
+            logoAsset: option.logoName,
+            email: option.email,
+            phoneE164: option.phoneE164,
+            phoneDisplay: option.phoneDisplay
+        )
     }
 }
 
@@ -276,3 +315,4 @@ private struct DividerLine: View {
         .environmentObject(CarriersFilterModel())
     }
 }
+
