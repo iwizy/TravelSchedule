@@ -26,6 +26,12 @@ struct RootTabsView: View {
             .tabItem { Image("TabIconMain") }
             .tag(AppTab.main)
             
+            .overlay(alignment: .top) {
+                Color(.systemBackground)
+                    .frame(height: 2)
+                    .ignoresSafeArea(edges: .top)
+            }
+            
             NavigationStack(path: $settingsPath) {
                 SettingsView()
                     .navigationTitle("Настройки")
