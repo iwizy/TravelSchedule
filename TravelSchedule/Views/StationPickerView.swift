@@ -3,68 +3,70 @@
 //  TravelSchedule
 //
 //  Экран выбора станции
-
+//
 import SwiftUI
 
 struct StationPickerView: View {
     let city: City
     let onPick: (_ station: Station) -> Void
     
-    @State private var stationQuery: String = ""
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var router: MainRouter
+    @Environment(\.apiClient) private var apiClient
+    @StateObject private var viewModel = StationPickerViewModel()
+    @State private var query: String = ""
     
     init(city: City, initialQuery: String? = nil, onPick: @escaping (_ station: Station) -> Void) {
         self.city = city
         self.onPick = onPick
         if let q = initialQuery {
-            _stationQuery = State(initialValue: q)
+            _query = State(initialValue: q)
         }
     }
     
-    private var filteredStations: [Station] {
-        let q = stationQuery.trimmingCharacters(in: .whitespaces).lowercased()
-        guard !q.isEmpty else { return city.stations }
-        return city.stations.filter { $0.name.lowercased().contains(q) }
-    }
+    private var filteredStations: [Station] { viewModel.filtered }
     
     var body: some View {
-        ZStack {
-            List {
-                Section {
-                    SearchBar(text: $stationQuery, placeholder: "Введите запрос")
-                }
-                .listRowSeparator(.hidden)
-                .listRowBackground(Color.clear)
-                .listRowInsets(.init(top: 0, leading: 16, bottom: 0, trailing: 16))
-                
-                ForEach(Array(filteredStations.enumerated()), id: \.element.id) { idx, station in
-                    Button {
-                        onPick(station)
-                    } label: {
-                        HStack {
-                            Text(station.name)
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .foregroundStyle(.ypBlack)
+        VStack(spacing: 0) {
+            SearchBar(text: $query, placeholder: "Введите запрос")
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
+                .padding(.bottom, 4)
+                .background(Color(.systemBackground))
+            
+            ZStack {
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(Array(filteredStations.enumerated()), id: \.element.id) { _, station in
+                            Button {
+                                print("🧭 [StationPicker] select station=\(station.title) (\(station.id)) in \(city.title)")
+                                onPick(station)
+                            } label: {
+                                HStack {
+                                    Text(station.title)
+                                    Spacer()
+                                    Image(systemName: "chevron.right")
+                                        .foregroundStyle(.ypBlack)
+                                }
+                                .frame(height: 60)
+                                .padding(.horizontal, 16)
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
-                    .buttonStyle(.plain)
-                    .listRowSeparator(.hidden)
-                    .frame(height: 60)
-                    .listRowInsets(.init(top: idx == 0 ? 16 : 0, leading: 16, bottom: 0, trailing: 16))
+                    .padding(.top, 16)
                 }
-            }
-            .listStyle(.plain)
-            .listSectionSpacing(.custom(0))
-            
-            if filteredStations.isEmpty && !stationQuery.isEmpty {
-                Text("Станция не найдена")
-                    .font(.system(size: 24, weight: .bold))
-                    .foregroundStyle(.ypBlack)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 24)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                    .allowsHitTesting(false)
+                
+                if filteredStations.isEmpty && !query.isEmpty {
+                    Text("Станции не найдены")
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundStyle(.ypBlack)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 24)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                        .allowsHitTesting(false)
+                }
             }
         }
         .navigationTitle("Выбор станции")
@@ -81,55 +83,21 @@ struct StationPickerView: View {
             }
         }
         .toolbar(.hidden, for: .tabBar)
-    }
-}
-
-#Preview("StationPickerView — список") {
-    let demoCity = City(
-        name: "Москва",
-        stations: [
-            Station(name: "Киевский вокзал"),
-            Station(name: "Курский вокзал"),
-            Station(name: "Ярославский вокзал"),
-            Station(name: "Белорусский вокзал"),
-            Station(name: "Савёловский вокзал"),
-            Station(name: "Ленинградский вокзал")
-        ]
-    )
-    
-    return NavigationStack {
-        StationPickerView(city: demoCity) { station in
-            print("Picked station: \(station.name)")
+        .background(Color(.systemBackground))
+        
+        .task {
+            print("➡️ [StationPicker] task load start city=\(city.title) (\(city.id))")
+            await viewModel.load(apiClient: apiClient, city: city)
+            if !query.isEmpty {
+                viewModel.setInitialQuery(query)
+            } else {
+                viewModel.applySearch()
+            }
+            print("✅ [StationPicker] task load done")
         }
-    }
-}
-
-#Preview("StationPickerView — не найдено") {
-    let demoCity = City(
-        name: "Москва",
-        stations: [
-            Station(name: "Киевский вокзал"),
-            Station(name: "Курский вокзал"),
-            Station(name: "Ярославский вокзал")
-        ]
-    )
-    
-    return NavigationStack {
-        StationPickerView(city: demoCity, initialQuery: "zzz") { _ in }
-    }
-}
-
-#Preview("StationPickerView — найдено (поиск)") {
-    let demoCity = City(
-        name: "Москва",
-        stations: [
-            Station(name: "Киевский вокзал"),
-            Station(name: "Курский вокзал"),
-            Station(name: "Ярославский вокзал")
-        ]
-    )
-    
-    return NavigationStack {
-        StationPickerView(city: demoCity, initialQuery: "Курск") { _ in }
+        .task(id: query) {
+            viewModel.searchText = query
+            viewModel.applySearch()
+        }
     }
 }

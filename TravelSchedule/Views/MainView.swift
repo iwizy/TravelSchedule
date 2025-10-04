@@ -67,11 +67,11 @@ struct MainView: View {
                 StationPickerView(city: city) { station in
                     switch field {
                     case .from:
-                        fromCity = city.name
-                        fromStation = station.name
+                        fromCity = city.title
+                        fromStation = station.title
                     case .to:
-                        toCity = city.name
-                        toStation = station.name
+                        toCity = city.title
+                        toStation = station.title
                     }
                     router.path = []
                 }

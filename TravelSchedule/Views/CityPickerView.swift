@@ -6,22 +6,13 @@
 
 import SwiftUI
 
-struct City: Identifiable, Hashable {
-    let id = UUID()
-    let name: String
-    let stations: [Station]
-}
-
-struct Station: Identifiable, Hashable {
-    let id = UUID()
-    let name: String
-}
-
 struct CityPickerView: View {
     let field: RouteField
     
     @EnvironmentObject var router: MainRouter
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.apiClient) private var apiClient
+    @StateObject private var viewModel = CityPickerViewModel()
     
     @State private var query: String = ""
     
@@ -32,71 +23,49 @@ struct CityPickerView: View {
         }
     }
     
-    private let allCities: [City] = [
-        City(name: "Москва", stations: [
-            Station(name: "Киевский вокзал"),
-            Station(name: "Курский вокзал"),
-            Station(name: "Ярославский вокзал"),
-            Station(name: "Белорусский вокзал"),
-            Station(name: "Савёловский вокзал"),
-            Station(name: "Ленинградский вокзал")
-        ]),
-        City(name: "Санкт Петербург", stations: [
-            Station(name: "Балтийский вокзал"),
-            Station(name: "Ладожский вокзал"),
-            Station(name: "Московский вокзал"),
-        ]),
-        City(name: "Сочи", stations: [Station(name: "Сочи")]),
-        City(name: "Горный воздух", stations: [Station(name: "Главный вокзал")]),
-        City(name: "Краснодар", stations: [Station(name: "Краснодар-1")]),
-        City(name: "Казань", stations: [Station(name: "Казань-1")]),
-        City(name: "Омск", stations: [Station(name: "Омск-Пасс.")])
-    ]
-    
-    private var filteredCities: [City] {
-        let q = query.trimmingCharacters(in: .whitespaces).lowercased()
-        guard !q.isEmpty else { return allCities }
-        return allCities.filter { $0.name.lowercased().contains(q) }
-    }
+    private var filteredCities: [City] { viewModel.filtered }
     
     var body: some View {
-        ZStack {
-            List {
-                Section {
-                    SearchBar(text: $query, placeholder: "Введите запрос")
-                }
-                .listRowSeparator(.hidden)
-                .listRowBackground(Color.clear)
-                .listRowInsets(.init(top: 0, leading: 16, bottom: 0, trailing: 16))
-                
-                ForEach(Array(filteredCities.enumerated()), id: \.element.id) { idx, city in
-                    Button {
-                        router.path.append(.station(city, field))
-                    } label: {
-                        HStack {
-                            Text(city.name)
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .foregroundStyle(.ypBlack)
+        VStack(spacing: 0) {
+            SearchBar(text: $query, placeholder: "Введите запрос")
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
+                .padding(.bottom, 4)
+                .background(Color(.systemBackground))
+            
+            ZStack {
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(Array(filteredCities.enumerated()), id: \.element.id) { _, city in
+                            Button {
+                                print("🧭 [CityPicker] select city=\(city.title) (\(city.id))")
+                                router.path.append(.station(city, field))
+                            } label: {
+                                HStack {
+                                    Text(city.title)
+                                    Spacer()
+                                    Image(systemName: "chevron.right")
+                                        .foregroundStyle(.ypBlack)
+                                }
+                                .frame(height: 60)
+                                .padding(.horizontal, 16)
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
-                    .buttonStyle(.plain)
-                    .listRowSeparator(.hidden)
-                    .frame(height: 60)
-                    .listRowInsets(.init(top: idx == 0 ? 16 : 0, leading: 16, bottom: 0, trailing: 16))
+                    .padding(.top, 16)
                 }
-            }
-            .listStyle(.plain)
-            .listSectionSpacing(.custom(0))
-            
-            if filteredCities.isEmpty && !query.isEmpty {
-                Text("Город не найден")
-                    .font(.system(size: 24, weight: .bold))
-                    .foregroundStyle(.ypBlack)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 24)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                    .allowsHitTesting(false)
+                
+                if filteredCities.isEmpty && !query.isEmpty {
+                    Text("Город не найден")
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundStyle(.ypBlack)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 24)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                        .allowsHitTesting(false)
+                }
             }
         }
         .navigationTitle("Выбор города")
@@ -112,27 +81,22 @@ struct CityPickerView: View {
                 }
             }
         }
-        .toolbar(.hidden, for: .tabBar)       
-    }
-}
-
-#Preview("Список городов") {
-    NavigationStack {
-        CityPickerView(field: .from)
-            .environmentObject(MainRouter())
-    }
-}
-
-#Preview("Город не найден") {
-    NavigationStack {
-        CityPickerView(field: .from, initialQuery: "wrgwerg")
-            .environmentObject(MainRouter())
-    }
-}
-
-#Preview("Город найден") {
-    NavigationStack {
-        CityPickerView(field: .from, initialQuery: "Москва")
-            .environmentObject(MainRouter())
+        .toolbar(.hidden, for: .tabBar)
+        .background(Color(.systemBackground))
+        
+        .task {
+            print("➡️ [CityPicker] task load start")
+            await viewModel.load(apiClient: apiClient)
+            if !query.isEmpty {
+                viewModel.setInitialQuery(query)
+            } else {
+                viewModel.applySearch()
+            }
+            print("✅ [CityPicker] task load done")
+        }
+        .task(id: query) {
+            viewModel.searchText = query
+            viewModel.applySearch()
+        }
     }
 }
