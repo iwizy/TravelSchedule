@@ -30,13 +30,24 @@ struct SearchBar: View {
                 .buttonStyle(.plain)
             }
         }
-        .frame(width: .infinity, height: 36)
+        .frame(maxWidth: .infinity, minHeight: 36, maxHeight: 36)
         .padding(.horizontal, 8)
         .background(Color(.ypSearch))
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 }
 
+#Preview("SearchBar — пустой") {
+    @Previewable @State var text = ""
+    return SearchBar(text: $text, placeholder: "Введите запрос")
+        .padding()
+}
+
+#Preview("SearchBar — с текстом") {
+    @Previewable @State var text = "Москва"
+    return SearchBar(text: $text, placeholder: "Введите запрос")
+        .padding()
+}
 #Preview("SearchBar — пустой") {
     @Previewable @State var text = ""
     return SearchBar(text: $text, placeholder: "Введите запрос")
