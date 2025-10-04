@@ -10,6 +10,12 @@ import SwiftUI
 @main
 struct TravelScheduleApp: App {
     @StateObject private var themeManager = ThemeManager()
+    
+    private let apiClient = APIClient(
+        serverURL: URL(string: Constants.apiURL)!,
+        apikey: Constants.apiKey
+    )
+    
     init() {
         let appearance = UITabBarAppearance()
         appearance.configureWithOpaqueBackground()
@@ -22,6 +28,7 @@ struct TravelScheduleApp: App {
     var body: some Scene {
         WindowGroup {
             RootTabsView()
+                .environment(\.apiClient, apiClient)
                 .environmentObject(themeManager)
                 .onAppear {
                     let isDark = UITraitCollection.current.userInterfaceStyle == .dark
