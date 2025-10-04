@@ -22,7 +22,7 @@ final class StationPickerViewModel: ObservableObject {
         print("➡️ [StationPickerVM] load start city=\(city.title) (\(city.id))")
 
         do {
-            let stations = try await apiClient.getStationsOfCity(cityId: city.id)
+            let stations = try await apiClient.getStationsOfCity(cityId: city.id, cityTitle: city.title)
 
             self.all = stations.sorted {
                 $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending
