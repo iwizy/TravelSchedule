@@ -14,6 +14,7 @@ struct CarriersListView: View {
     @EnvironmentObject var router: MainRouter
     @EnvironmentObject var filters: CarriersFilterModel
     @StateObject private var vm = CarriersListViewModel()
+    @Environment(\.apiClient) private var apiClient
     
     
     private var filteredOptions: [CarrierOption] {
@@ -118,6 +119,9 @@ struct CarriersListView: View {
         .toolbar(.hidden, for: .tabBar)
         .onDisappear {
             filters.appliedFilters = nil
+        }
+        .task {
+            await vm.checkAvailabilityReal(apiClient: apiClient, summary: summary)
         }
     }
     
@@ -247,4 +251,3 @@ private struct DividerLine: View {
         .environmentObject(CarriersFilterModel())
     }
 }
-
