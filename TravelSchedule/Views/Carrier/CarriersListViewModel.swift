@@ -8,24 +8,27 @@ import Foundation
 
 @MainActor
 final class CarriersListViewModel: ObservableObject {
-
+    
     @Published var options: [CarrierOption] = []
-
+    @Published var isChecking: Bool = false
+    
     private var cityToStationsCache: [String: [Station]] = [:]
     private var cityTitleToIdCache: [String: String] = [:]
-
+    
     init() {
         self.options = demoOptions
     }
-
+    
     func decideAvailability(using summary: RouteSummary) async {
         print("➡️ [CarriersVM] decide start summary=\(summary)")
-
+        isChecking = true
+        defer { isChecking = false }
+        
         let fromCity = summary.fromCity.trimmingCharacters(in: .whitespacesAndNewlines)
         let toCity   = summary.toCity.trimmingCharacters(in: .whitespacesAndNewlines)
         let fromSt   = summary.fromStation.trimmingCharacters(in: .whitespacesAndNewlines)
         let toSt     = summary.toStation.trimmingCharacters(in: .whitespacesAndNewlines)
-
+        
         if fromCity.caseInsensitiveCompare(toCity) == .orderedSame ||
             fromSt.caseInsensitiveCompare(toSt) == .orderedSame {
             self.options = []
@@ -35,30 +38,32 @@ final class CarriersListViewModel: ObservableObject {
             print("✅ [CarriersVM] decide result: FOUND → demo shown (\(demoOptions.count))")
         }
     }
-
+    
     func checkAvailabilityReal(apiClient: APIClient, summary: RouteSummary) async {
+        isChecking = true
+        defer { isChecking = false }
         print("➡️ [CarriersVM] real check start summary=\(summary)")
-
+        
         let fromCity = summary.fromCity.trimmingCharacters(in: .whitespacesAndNewlines)
         let toCity   = summary.toCity.trimmingCharacters(in: .whitespacesAndNewlines)
         let fromSt   = summary.fromStation.trimmingCharacters(in: .whitespacesAndNewlines)
         let toSt     = summary.toStation.trimmingCharacters(in: .whitespacesAndNewlines)
-
+        
         if fromCity.caseInsensitiveCompare(toCity) == .orderedSame ||
             fromSt.caseInsensitiveCompare(toSt) == .orderedSame {
             self.options = []
             print("✅ [CarriersVM] real check: NOT FOUND (same city/station)")
             return
         }
-
+        
         self.options = demoOptions
         print("ℹ️ [CarriersVM] real check: TEMP demo shown until API is wired")
     }
-
+    
     private func resolveCityId(apiClient: APIClient, cityTitle: String) async throws -> String? {
         return nil
     }
-
+    
     private func resolveStationCode(apiClient: APIClient, cityTitle: String, stationTitle: String) async throws -> String? {
         let key = cityTitle.lowercased()
         if let stations = cityToStationsCache[key] {
@@ -66,7 +71,7 @@ final class CarriersListViewModel: ObservableObject {
         }
         return nil
     }
-
+    
     private func pickStationCode(in stations: [Station], stationTitle: String) -> String? {
         let target = stationTitle.lowercased()
         if let exact = stations.first(where: {
@@ -76,7 +81,7 @@ final class CarriersListViewModel: ObservableObject {
         }
         return stations.first(where: { $0.title.lowercased().contains(target) })?.id
     }
-
+    
     private var demoOptions: [CarrierOption] = [
         CarrierOption(
             carrierName: "РЖД", logoName: "rzd_logo",

@@ -123,6 +123,17 @@ struct CarriersListView: View {
         .task {
             await vm.checkAvailabilityReal(apiClient: apiClient, summary: summary)
         }
+        .overlay {
+            if vm.isChecking {
+                ZStack {
+                    Color.black.opacity(0.05).ignoresSafeArea()
+                    LoaderView()                    
+                }
+                .transition(.opacity)
+            }
+        }
+        .disabled(vm.isChecking)
+        
     }
     
     
