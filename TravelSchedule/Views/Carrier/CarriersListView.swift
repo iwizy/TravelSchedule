@@ -16,6 +16,8 @@ struct CarriersListView: View {
     @StateObject private var vm = CarriersListViewModel()
     @Environment(\.apiClient) private var apiClient
     
+    @State private var didLoadOnce = false
+    
     private var filteredOptions: [CarrierOption] {
         guard let f = filters.appliedFilters else { return vm.options }
         return vm.options.filter { option in
@@ -123,6 +125,8 @@ struct CarriersListView: View {
             filters.appliedFilters = nil
         }
         .task {
+            guard !didLoadOnce else { return }
+            didLoadOnce = true
             await vm.checkAvailabilityReal(apiClient: apiClient, summary: summary)
         }
         .overlay {
@@ -168,6 +172,7 @@ struct CarriersListView: View {
             id: option.logoName,
             name: option.carrierName,
             logoAsset: option.logoName,
+            logoURL: option.logoURL,
             email: option.email,
             phoneE164: option.phoneE164,
             phoneDisplay: option.phoneDisplay

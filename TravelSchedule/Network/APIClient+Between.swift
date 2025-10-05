@@ -2,116 +2,134 @@
 //  APIClient+Between.swift
 //  TravelSchedule
 //
-//  Поиск маршрутов между станциями
+//  Поиск расписаний между станциями
 
 import Foundation
 
 extension APIClient {
+    struct BetweenSegment: Hashable, Codable {
+        let carrierName: String
+        let carrierLogoURL: URL?
+        let carrierCode: String?
+        let departureISO: String
+        let arrivalISO: String
+        let hasTransfer: Bool
+        let carrierEmail: String?
+        let carrierPhone: String?
+        let carrierPhoneE164: String?
+    }
+    
     private struct SearchResponse: Decodable {
-        let segments: [Segment]?
-    }
-    
-    private struct Segment: Decodable {
-        let departure: String?
-        let arrival: String?
-        let thread: ThreadInfo?
-        let transfer: Bool?
-    }
-    
-    private struct ThreadInfo: Decodable {
-        let carrier: CarrierInfo?
-        let title: String?
-    }
-    
-    private struct CarrierInfo: Decodable {
-        let title: String?
-        let logo: String?
-    }
-    
-    public struct BetweenSegment: Sendable, Equatable {
-        public let carrierName: String
-        public let departureISO: String
-        public let arrivalISO: String
-        public let hasTransfer: Bool
-        public let carrierLogoURL: URL?
-    }
-    
-    public func getSegmentsBetween(
-        from fromCode: String,
-        to toCode: String,
-        date: Date,
-        transport: String? = nil
-    ) async throws -> [BetweenSegment] {
-        try await logRequest("between_get_segments", params: [
-            "from": fromCode, "to": toCode, "date": Self.yyyyMMdd(date)
-        ]) {
-            guard let baseComps = URLComponents(string: Constants.apiURL) else {
-                throw URLError(.badURL)
-            }
-            let baseURL = baseComps.url!.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-            guard var comps = URLComponents(string: baseURL + "/search/") else {
-                throw URLError(.badURL)
-            }
-            
-            var query: [URLQueryItem] = [
-                URLQueryItem(name: "from", value: fromCode),
-                URLQueryItem(name: "to", value: toCode),
-                URLQueryItem(name: "date", value: Self.yyyyMMdd(date)),
-                URLQueryItem(name: "apikey", value: self.apikey)
-            ]
-            if let t = transport, !t.isEmpty {
-                query.append(URLQueryItem(name: "transport_types", value: t))
-            }
-            comps.queryItems = query
-            
-            guard let url = comps.url else { throw URLError(.badURL) }
-            
-            var req = URLRequest(url: url)
-            req.httpMethod = "GET"
-            req.timeoutInterval = 30
-            
-            let (data, resp) = try await URLSession.shared.data(for: req)
-            guard let http = resp as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
-                throw URLError(.badServerResponse)
-            }
-            
-            let decoded = try JSONDecoder().decode(SearchResponse.self, from: data)
-            let raw = decoded.segments ?? []
-            
-            let mapped: [BetweenSegment] = raw.compactMap { seg in
-                guard
-                    let dep = seg.departure, !dep.isEmpty,
-                    let arr = seg.arrival,   !arr.isEmpty
-                else { return nil }
-                
-                let name = seg.thread?.carrier?.title?.trimmingCharacters(in: .whitespacesAndNewlines)
-                let carrier = (name?.isEmpty == false) ? name! : "—"
-                let hasTransfer = seg.transfer ?? false
-                
-                let rawLogo = seg.thread?.carrier?.logo
-                let normalizedLogo = rawLogo.flatMap { s -> String in
-                    s.hasPrefix("//") ? "https:\(s)" : s
-                }
-                let logoURL = normalizedLogo.flatMap(URL.init(string:))
-                
-                return BetweenSegment(
-                    carrierName: carrier,
-                    departureISO: dep,
-                    arrivalISO: arr,
-                    hasTransfer: hasTransfer,
-                    carrierLogoURL: logoURL
-                )
-            }
-            
-            return mapped
+        let segments: [SearchSegment]?
+        let search: SearchMeta?
+        
+        struct SearchMeta: Decodable {
+            let date: String?
+            let has_transfers: Bool?
         }
     }
     
-    private static func yyyyMMdd(_ date: Date) -> String {
+    private struct SearchSegment: Decodable {
+        let departure: String?
+        let arrival: String?
+        let thread: ThreadInfo?
+        
+        let has_transfers: Bool?
+    }
+    
+    private struct ThreadInfo: Decodable {
+        let carrier: CarrierLite?
+    }
+    
+    private struct CarrierLite: Decodable {
+        let title: String?
+        let logo: String?
+        let codes: CarrierCodes?
+        let phone: String?
+        let email: String?
+    }
+    
+    private struct CarrierCodes: Decodable {
+        let yandex: String?
+    }
+    
+    func getSegmentsBetween(
+        from: String,
+        to: String,
+        date: Date,
+        transport: String?
+    ) async throws -> [BetweenSegment] {
+        
+        try await logRequest("between (search)", params: [
+            "from": from, "to": to,
+            "date": Self.dateYMD.string(from: date),
+            "transport": transport ?? "any"
+        ]) {
+            var comps = URLComponents(string: "https://api.rasp.yandex.net/v3.0/search/")!
+            var items: [URLQueryItem] = [
+                URLQueryItem(name: "apikey", value: apikey),
+                URLQueryItem(name: "from", value: from),
+                URLQueryItem(name: "to", value: to),
+                URLQueryItem(name: "date", value: Self.dateYMD.string(from: date)),
+                URLQueryItem(name: "format", value: "json"),
+                URLQueryItem(name: "lang", value: "ru_RU")
+            ]
+            if let t = transport, !t.isEmpty {
+                items.append(URLQueryItem(name: "transport_types", value: t))
+            }
+            comps.queryItems = items
+            
+            guard let url = comps.url else { throw URLError(.badURL) }
+            
+            let (data, response) = try await URLSession.shared.data(from: url)
+            guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
+                throw URLError(.badServerResponse)
+            }
+            
+            
+            let decoder = JSONDecoder()
+            decoder.keyDecodingStrategy = .convertFromSnakeCase
+            let decoded = try decoder.decode(SearchResponse.self, from: data)
+            
+            
+            let segments = (decoded.segments ?? [])
+                .compactMap { seg -> BetweenSegment? in
+                    guard let dep = seg.departure, let arr = seg.arrival else { return nil }
+                    
+                    let carrierTitle = seg.thread?.carrier?.title ?? "—"
+                    let logoStr = seg.thread?.carrier?.logo
+                    let logoURL = logoStr.flatMap { raw -> URL? in
+                        if raw.hasPrefix("//") { return URL(string: "https:\(raw)") }
+                        return URL(string: raw)
+                    }
+                    let code = seg.thread?.carrier?.codes?.yandex
+                    let hasTr = seg.has_transfers ?? false
+                    
+                    let email = seg.thread?.carrier?.email
+                    let phone = seg.thread?.carrier?.phone
+                    
+                    return BetweenSegment(
+                        carrierName: carrierTitle,
+                        carrierLogoURL: logoURL,
+                        carrierCode: code,
+                        departureISO: dep,
+                        arrivalISO: arr,
+                        hasTransfer: hasTr,
+                        carrierEmail: email,
+                        carrierPhone: phone,
+                        carrierPhoneE164: nil
+                    )
+                }
+            return segments
+        }
+    }
+    
+    private static let dateYMD: DateFormatter = {
         let f = DateFormatter()
         f.calendar = Calendar(identifier: .gregorian)
-        f.locale = Locale(identifier: "en_US_POSIX")
+        f.locale = Locale(identifier: "ru_RU")
+        f.timeZone = .current
         f.dateFormat = "yyyy-MM-dd"
-        return f.string(from: date)
-    }
+        return f
+    }()
 }

@@ -65,35 +65,67 @@ final class CarriersListViewModel: ObservableObject {
                 self.hasAvailability = false
                 print("✅ [CarriersVM] real check result: NOT FOUND")
             } else {
-                let sample = demoOptions.first ?? CarrierOption(
-                    carrierName: "—", logoName: "rzd_logo",
-                    dateText: "—", depart: "—", arrive: "—",
-                    durationText: "—", transferNote: nil,
-                    email: "", phoneE164: "", phoneDisplay: ""
-                )
-                self.options = segs.map { seg in
+                let fallbackLogoAsset = "rzd_logo"
+                let mapped: [CarrierOption] = segs.map { seg in
                     let dep = Self.formatTime(seg.departureISO)
                     let arr = Self.formatTime(seg.arrivalISO)
                     let dur = Self.durationText(depISO: seg.departureISO, arrISO: seg.arrivalISO)
                     let dt  = Self.formatDateDM(seg.departureISO)
                     let note = Self.transferNote(from: seg)
-
+                    
                     return CarrierOption(
                         carrierName: seg.carrierName,
-                        logoName: sample.logoName,
+                        logoName: fallbackLogoAsset,
                         dateText: dt,
                         depart: dep,
                         arrive: arr,
                         durationText: dur,
                         transferNote: note,
-                        email: sample.email,
-                        phoneE164: sample.phoneE164,
-                        phoneDisplay: sample.phoneDisplay,
+                        email: seg.carrierEmail,
+                        phoneE164: seg.carrierPhoneE164,
+                        phoneDisplay: seg.carrierPhone,
                         logoURL: seg.carrierLogoURL
                     )
                 }
+                
                 self.hasAvailability = true
-                print("✅ [CarriersVM] real check result: FOUND (\(segs.count)) → carrier names mapped")
+                print("✅ [CarriersVM] base mapping done (\(segs.count)) → names/dates/times/duration/transfer/logoURL")
+                
+                let carrierCodes: [String] = segs.compactMap { $0.carrierCode }.uniqued()
+                if !carrierCodes.isEmpty {
+                    print("ℹ️ [CarriersVM] fetching carrier info for codes: \(carrierCodes)")
+                    
+                    var infoByCode: [String: APIClient.CarrierInfo] = [:]
+                    await withTaskGroup(of: (String, APIClient.CarrierInfo?).self) { group in
+                        for code in carrierCodes {
+                            group.addTask {
+                                do {
+                                    let info = try await apiClient.getCarrierInfo(code: code)
+                                    return (code, info)
+                                } catch {
+                                    print("⚠️ [CarriersVM] getCarrierInfo failed for code=\(code): \(error)")
+                                    return (code, nil)
+                                }
+                            }
+                        }
+                        for await (code, info) in group {
+                            if let info { infoByCode[code] = info }
+                        }
+                    }
+                    
+                    for (idx, seg) in segs.enumerated() {
+                        guard let code = seg.carrierCode, let info = infoByCode[code] else { continue }
+                        options[idx].email = info.email
+                        options[idx].phoneE164 = info.phoneE164 ?? info.phone
+                        options[idx].phoneDisplay = info.phoneDisplay ?? info.phone
+                        if let url = info.logoURL {
+                            options[idx].logoURL = url
+                        }
+                    }
+                    print("✅ [CarriersVM] carrier contacts merged → options updated")
+                } else {
+                    print("ℹ️ [CarriersVM] no carrier codes in segments — skip contacts enrichment")
+                }
             }
             
         } catch {
@@ -189,7 +221,7 @@ final class CarriersListViewModel: ObservableObject {
         f.setLocalizedDateFormatFromTemplate("d MMMM")
         return f
     }()
-
+    
     private static func parseISO(_ iso: String) -> Date? {
         if let d = isoParser.date(from: iso) { return d }
         let fallback = ISO8601DateFormatter()
@@ -197,7 +229,7 @@ final class CarriersListViewModel: ObservableObject {
         fallback.timeZone = TimeZone(secondsFromGMT: 0)
         return fallback.date(from: iso)
     }
-
+    
     private static func formatDateDM(_ iso: String) -> String {
         guard let d = parseISO(iso) else { return "—" }
         return dayMonth.string(from: d)
@@ -236,4 +268,11 @@ final class CarriersListViewModel: ObservableObject {
             phoneDisplay: "+7 (495) 783-83-83"
         )
     ]
+}
+
+private extension Array where Element: Hashable {
+    func uniqued() -> [Element] {
+        var set = Set<Element>()
+        return self.filter { set.insert($0).inserted }
+    }
 }
