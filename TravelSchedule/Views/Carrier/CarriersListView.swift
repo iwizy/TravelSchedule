@@ -16,7 +16,6 @@ struct CarriersListView: View {
     @StateObject private var vm = CarriersListViewModel()
     @Environment(\.apiClient) private var apiClient
     
-    
     private var filteredOptions: [CarrierOption] {
         guard let f = filters.appliedFilters else { return vm.options }
         return vm.options.filter { option in
@@ -40,7 +39,10 @@ struct CarriersListView: View {
                     .padding(.top, 16)
                     .padding(.horizontal, 16)
                 
-                if filteredOptions.isEmpty {
+                if vm.hasAvailability == nil { 
+                    Spacer()
+                    Color.clear.frame(height: 56 + 12 + 8)
+                } else if vm.hasAvailability == false {
                     Spacer()
                     Text("Вариантов нет")
                         .font(.system(size: 24, weight: .bold))
@@ -127,15 +129,13 @@ struct CarriersListView: View {
             if vm.isChecking {
                 ZStack {
                     Color.black.opacity(0.05).ignoresSafeArea()
-                    LoaderView()                    
+                    LoaderView()
                 }
                 .transition(.opacity)
             }
         }
         .disabled(vm.isChecking)
-        
     }
-    
     
     private func matchTransfers(_ option: CarrierOption, _ filters: FiltersSelection) -> Bool {
         guard let t = filters.transfers else { return true }

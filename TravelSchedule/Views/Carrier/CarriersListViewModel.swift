@@ -10,37 +10,19 @@ import Foundation
 final class CarriersListViewModel: ObservableObject {
     @Published var options: [CarrierOption] = []
     @Published var isChecking: Bool = false
+    @Published var hasAvailability: Bool? = nil
     
     private var cityToStationsCache: [String: [Station]] = [:]
-    private var cityTitleToIdCache: [String: String] = [:]
+    private var segments: [APIClient.BetweenSegment] = []
     
     init() {
-        self.options = demoOptions
-    }
-    
-    func decideAvailability(using summary: RouteSummary) async {
-        print("➡️ [CarriersVM] decide start summary=\(summary)")
-        isChecking = true
-        defer { isChecking = false }
-        
-        let fromCity = summary.fromCity.trimmingCharacters(in: .whitespacesAndNewlines)
-        let toCity   = summary.toCity.trimmingCharacters(in: .whitespacesAndNewlines)
-        let fromSt   = summary.fromStation.trimmingCharacters(in: .whitespacesAndNewlines)
-        let toSt     = summary.toStation.trimmingCharacters(in: .whitespacesAndNewlines)
-        
-        if fromCity.caseInsensitiveCompare(toCity) == .orderedSame ||
-            fromSt.caseInsensitiveCompare(toSt) == .orderedSame {
-            self.options = []
-            print("✅ [CarriersVM] decide result: NOT FOUND (same city/station)")
-        } else {
-            self.options = demoOptions
-            print("✅ [CarriersVM] decide result: FOUND → demo shown (\(demoOptions.count))")
-        }
+        self.options = []
     }
     
     func checkAvailabilityReal(apiClient: APIClient, summary: RouteSummary) async {
         print("➡️ [CarriersVM] real check start summary=\(summary)")
         isChecking = true
+        hasAvailability = nil
         defer { isChecking = false }
         
         let fromCity = summary.fromCity.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -50,7 +32,9 @@ final class CarriersListViewModel: ObservableObject {
         
         if fromCity.caseInsensitiveCompare(toCity) == .orderedSame ||
             fromSt.caseInsensitiveCompare(toSt) == .orderedSame {
+            self.segments = []
             self.options = []
+            self.hasAvailability = false
             print("✅ [CarriersVM] real check: NOT FOUND (same city/station)")
             return
         }
@@ -61,79 +45,68 @@ final class CarriersListViewModel: ObservableObject {
             let (fCode, tCode) = try await (fromCode, toCode)
             
             guard let fromCode = fCode, let toCode = tCode else {
+                self.segments = []
                 self.options = []
+                self.hasAvailability = false
                 print("⚠️ [CarriersVM] codes not resolved: from=\(String(describing: fCode)) to=\(String(describing: tCode))")
                 return
             }
-            
             let today = Date()
-            let has = try await apiClient.hasSegmentsBetween(
+            let segs = try await apiClient.getSegmentsBetween(
                 from: fromCode,
                 to: toCode,
                 date: today,
                 transport: nil
             )
+            self.segments = segs
             
-            if has {
-                self.options = demoOptions
-                print("✅ [CarriersVM] real check result: FOUND → demo shown (\(demoOptions.count))")
-            } else {
+            if segs.isEmpty {
                 self.options = []
+                self.hasAvailability = false
                 print("✅ [CarriersVM] real check result: NOT FOUND")
+            } else {
+                let sample = demoOptions.first ?? CarrierOption(
+                    carrierName: "—", logoName: "rzd_logo",
+                    dateText: "—", depart: "—", arrive: "—",
+                    durationText: "—", transferNote: nil,
+                    email: "", phoneE164: "", phoneDisplay: ""
+                )
+                self.options = Array(repeating: sample, count: segs.count)
+                self.hasAvailability = true
+                print("✅ [CarriersVM] real check result: FOUND (\(segs.count) segments) → demo duplicated")
             }
             
         } catch {
+            self.segments = []
             self.options = []
+            self.hasAvailability = false
             print("❌ [CarriersVM] real check error: \(error)")
         }
     }
     
     private func resolveStationCode(apiClient: APIClient, cityTitle: String, stationTitle: String) async throws -> String? {
-        guard let cityId = try await resolveCityId(apiClient: apiClient, cityTitle: cityTitle) else {
-            print("⚠️ [CarriersVM] cityId not found for cityTitle=\(cityTitle)")
-            return nil
-        }
+        let key = cityTitle.lowercased()
         
-        let cityKey = cityTitle.lowercased()
-        if let cached = cityToStationsCache[cityKey],
+        if let cached = cityToStationsCache[key],
            let code = pickStationCode(in: cached, stationTitle: stationTitle) {
-            print("ℹ️ [CarriersVM] code from cache for cityId=\(cityId) cityTitle=\(cityTitle)")
+            print("ℹ️ [CarriersVM] code from cache for city=\(cityTitle)")
             return code
         }
         
-        let stations = try await apiClient.getStationsOfCity(cityId: cityId)
-        cityToStationsCache[cityKey] = stations
+        let stations = try await apiClient.getStationsOfCity(cityId: "", cityTitle: cityTitle)
+        cityToStationsCache[key] = stations
         
         let code = pickStationCode(in: stations, stationTitle: stationTitle)
-        print("ℹ️ [CarriersVM] code resolved via API for cityId=\(cityId) cityTitle=\(cityTitle) station=\(stationTitle) → \(String(describing: code))")
+        print("ℹ️ [CarriersVM] code resolved via API for city=\(cityTitle) station=\(stationTitle) → \(String(describing: code))")
         return code
     }
     
-    private func resolveCityId(apiClient: APIClient, cityTitle: String) async throws -> String? {
-        let key = cityTitle.lowercased()
-        if let cached = cityTitleToIdCache[key] { return cached }
-        
-        let cities = try await apiClient.getRussianCities()
-        if let found = cities.first(where: { $0.title.compare(cityTitle, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame }) {
-            cityTitleToIdCache[key] = found.id
-            return found.id
-        }
-        
-        if let contains = cities.first(where: { $0.title.lowercased().contains(key) }) {
-            cityTitleToIdCache[key] = contains.id
-            return contains.id
-        }
-        
-        return nil
-    }
-    
     private func pickStationCode(in stations: [Station], stationTitle: String) -> String? {
-        let target = stationTitle.lowercased()
         if let exact = stations.first(where: {
             $0.title.compare(stationTitle, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame
-        }) {
-            return exact.id
-        }
+        }) { return exact.id }
+        
+        let target = stationTitle.lowercased()
         return stations.first(where: { $0.title.lowercased().contains(target) })?.id
     }
     
