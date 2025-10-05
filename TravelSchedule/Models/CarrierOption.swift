@@ -15,7 +15,6 @@ struct CarrierOption: Identifiable, Hashable {
     let arrive: String
     let durationText: String
     let transferNote: String?
-    
     let email: String?
     let phoneE164: String?
     let phoneDisplay: String?
