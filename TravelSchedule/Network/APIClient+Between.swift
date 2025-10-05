@@ -25,6 +25,7 @@ extension APIClient {
     
     private struct CarrierInfo: Decodable {
         let title: String?
+        let logo: String?
     }
     
     public struct BetweenSegment: Sendable, Equatable {
@@ -32,6 +33,7 @@ extension APIClient {
         public let departureISO: String
         public let arrivalISO: String
         public let hasTransfer: Bool
+        public let carrierLogoURL: URL?
     }
     
     public func getSegmentsBetween(
@@ -86,11 +88,18 @@ extension APIClient {
                 let carrier = (name?.isEmpty == false) ? name! : "—"
                 let hasTransfer = seg.transfer ?? false
                 
+                let rawLogo = seg.thread?.carrier?.logo
+                let normalizedLogo = rawLogo.flatMap { s -> String in
+                    s.hasPrefix("//") ? "https:\(s)" : s
+                }
+                let logoURL = normalizedLogo.flatMap(URL.init(string:))
+                
                 return BetweenSegment(
                     carrierName: carrier,
                     departureISO: dep,
                     arrivalISO: arr,
-                    hasTransfer: hasTransfer
+                    hasTransfer: hasTransfer,
+                    carrierLogoURL: logoURL
                 )
             }
             

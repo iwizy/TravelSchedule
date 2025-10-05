@@ -71,9 +71,29 @@ final class CarriersListViewModel: ObservableObject {
                     durationText: "—", transferNote: nil,
                     email: "", phoneE164: "", phoneDisplay: ""
                 )
-                self.options = Array(repeating: sample, count: segs.count)
+                self.options = segs.map { seg in
+                    let dep = Self.formatTime(seg.departureISO)
+                    let arr = Self.formatTime(seg.arrivalISO)
+                    let dur = Self.durationText(depISO: seg.departureISO, arrISO: seg.arrivalISO)
+                    let dt  = Self.formatDateDM(seg.departureISO)
+                    let note = Self.transferNote(from: seg)
+
+                    return CarrierOption(
+                        carrierName: seg.carrierName,
+                        logoName: sample.logoName,
+                        dateText: dt,
+                        depart: dep,
+                        arrive: arr,
+                        durationText: dur,
+                        transferNote: note,
+                        email: sample.email,
+                        phoneE164: sample.phoneE164,
+                        phoneDisplay: sample.phoneDisplay,
+                        logoURL: seg.carrierLogoURL
+                    )
+                }
                 self.hasAvailability = true
-                print("✅ [CarriersVM] real check result: FOUND (\(segs.count) segments) → demo duplicated")
+                print("✅ [CarriersVM] real check result: FOUND (\(segs.count)) → carrier names mapped")
             }
             
         } catch {
@@ -108,6 +128,83 @@ final class CarriersListViewModel: ObservableObject {
         
         let target = stationTitle.lowercased()
         return stations.first(where: { $0.title.lowercased().contains(target) })?.id
+    }
+    
+    private static let isoParser: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        f.timeZone = TimeZone(secondsFromGMT: 0)
+        return f
+    }()
+    
+    private static let hhmm: DateFormatter = {
+        let f = DateFormatter()
+        f.calendar = Calendar(identifier: .gregorian)
+        f.locale = Locale(identifier: "ru_RU")
+        f.timeZone = .current
+        f.dateFormat = "HH:mm"
+        return f
+    }()
+    
+    private static func formatTime(_ iso: String) -> String {
+        if let d = isoParser.date(from: iso) {
+            return hhmm.string(from: d)
+        }
+        let fallback = ISO8601DateFormatter()
+        fallback.formatOptions = [.withInternetDateTime]
+        fallback.timeZone = TimeZone(secondsFromGMT: 0)
+        if let d = fallback.date(from: iso) {
+            return hhmm.string(from: d)
+        }
+        return "—"
+    }
+    
+    private static func durationText(depISO: String, arrISO: String) -> String {
+        func parse(_ iso: String) -> Date? {
+            if let d = isoParser.date(from: iso) { return d }
+            let fallback = ISO8601DateFormatter()
+            fallback.formatOptions = [.withInternetDateTime]
+            fallback.timeZone = TimeZone(secondsFromGMT: 0)
+            return fallback.date(from: iso)
+        }
+        
+        guard let dep = parse(depISO), let arr = parse(arrISO) else { return "—" }
+        let seconds = max(0, Int(arr.timeIntervalSince(dep)))
+        let minutes = seconds / 60
+        let h = minutes / 60
+        let m = minutes % 60
+        
+        switch (h, m) {
+        case (0, let m): return "\(m) м"
+        case (let h, 0): return "\(h) ч"
+        default:         return "\(h) ч \(m) м"
+        }
+    }
+    
+    private static let dayMonth: DateFormatter = {
+        let f = DateFormatter()
+        f.calendar = Calendar(identifier: .gregorian)
+        f.locale = Locale(identifier: "ru_RU")
+        f.timeZone = .current
+        f.setLocalizedDateFormatFromTemplate("d MMMM")
+        return f
+    }()
+
+    private static func parseISO(_ iso: String) -> Date? {
+        if let d = isoParser.date(from: iso) { return d }
+        let fallback = ISO8601DateFormatter()
+        fallback.formatOptions = [.withInternetDateTime]
+        fallback.timeZone = TimeZone(secondsFromGMT: 0)
+        return fallback.date(from: iso)
+    }
+
+    private static func formatDateDM(_ iso: String) -> String {
+        guard let d = parseISO(iso) else { return "—" }
+        return dayMonth.string(from: d)
+    }
+    
+    private static func transferNote(from seg: APIClient.BetweenSegment) -> String? {
+        seg.hasTransfer ? "С пересадкой" : nil
     }
     
     private var demoOptions: [CarrierOption] = [

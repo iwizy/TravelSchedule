@@ -18,4 +18,5 @@ struct CarrierOption: Identifiable, Hashable {
     let email: String?
     let phoneE164: String?
     let phoneDisplay: String?
+    var logoURL: URL? = nil
 }

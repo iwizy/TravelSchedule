@@ -39,7 +39,7 @@ struct CarriersListView: View {
                     .padding(.top, 16)
                     .padding(.horizontal, 16)
                 
-                if vm.hasAvailability == nil { 
+                if vm.hasAvailability == nil {
                     Spacer()
                     Color.clear.frame(height: 56 + 12 + 8)
                 } else if vm.hasAvailability == false {
@@ -181,13 +181,35 @@ private struct CarrierRow: View {
     var body: some View {
         VStack(spacing: 0) {
             ZStack(alignment: .topTrailing) {
-                
                 HStack(spacing: 12) {
-                    Image(option.logoName)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 38, height: 38)
-                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(Color(.ypWhiteUniversal))
+                        
+                        Group {
+                            if let url = option.logoURL {
+                                AsyncImage(url: url) { phase in
+                                    switch phase {
+                                    case .success(let img):
+                                        img
+                                            .resizable()
+                                            .scaledToFit()
+                                    case .empty:
+                                        Color.clear
+                                    case .failure(_):
+                                        Color.clear
+                                    @unknown default:
+                                        Color.clear
+                                    }
+                                }
+                            } else {
+                                Color.clear
+                            }
+                        }
+                        .padding(6)
+                    }
+                    .frame(width: 38, height: 38)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     
                     VStack(alignment: .leading, spacing: 4) {
                         Text(option.carrierName)
