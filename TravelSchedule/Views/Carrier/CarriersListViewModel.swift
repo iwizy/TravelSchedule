@@ -87,7 +87,7 @@ final class CarriersListViewModel: ObservableObject {
                         logoURL: seg.carrierLogoURL
                     )
                 }
-                
+                self.options = mapped
                 self.hasAvailability = true
                 print("✅ [CarriersVM] base mapping done (\(segs.count)) → names/dates/times/duration/transfer/logoURL")
                 
