@@ -20,3 +20,7 @@ struct CarrierOption: Identifiable, Hashable {
     var phoneDisplay: String?
     var logoURL: URL?
 }
+
+extension CarrierOption {
+    var hasTransfer: Bool { transferNote != nil }
+}

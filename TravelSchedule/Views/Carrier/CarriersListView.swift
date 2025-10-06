@@ -19,10 +19,7 @@ struct CarriersListView: View {
     @State private var didLoadOnce = false
     
     private var filteredOptions: [CarrierOption] {
-        guard let f = filters.appliedFilters else { return vm.options }
-        return vm.options.filter { option in
-            matchTransfers(option, f) && matchTimeBands(option, f)
-        }
+        applyFilters(vm.options, filters.appliedFilters)
     }
     
     private var hasActiveFilters: Bool {
@@ -55,26 +52,38 @@ struct CarriersListView: View {
                     Spacer()
                     Color.clear.frame(height: 56 + 12 + 8)
                 } else {
-                    List {
-                        ForEach(filteredOptions) { item in
-                            Button {
-                                router.path.append(.carrierInfo(carrier(from: item)))
-                            } label: {
-                                CarrierRow(option: item)
-                                    .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-                            }
-                            .buttonStyle(.plain)
-                            .listRowSeparator(.hidden)
-                            .listRowInsets(.init(top: 0, leading: 16, bottom: 8, trailing: 16))
-                        }
-                    }
-                    .listStyle(.plain)
-                    .listRowSeparator(.hidden)
-                    .listRowSpacing(0)
-                    .listSectionSpacing(.custom(0))
-                    .padding(.top, 16)
-                    .safeAreaInset(edge: .bottom) {
+                    if filteredOptions.isEmpty {
+                        Spacer()
+                        Text("Вариантов нет")
+                            .font(.system(size: 24, weight: .bold))
+                            .foregroundStyle(.ypBlack)
+                            .multilineTextAlignment(.center)
+                            .frame(maxWidth: .infinity)
+                            .padding(.horizontal, 24)
+                        Spacer()
                         Color.clear.frame(height: 56 + 12 + 8)
+                    } else {
+                        List {
+                            ForEach(filteredOptions) { item in
+                                Button {
+                                    router.path.append(.carrierInfo(carrier(from: item)))
+                                } label: {
+                                    CarrierRow(option: item)
+                                        .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                                }
+                                .buttonStyle(.plain)
+                                .listRowSeparator(.hidden)
+                                .listRowInsets(.init(top: 0, leading: 16, bottom: 8, trailing: 16))
+                            }
+                        }
+                        .listStyle(.plain)
+                        .listRowSeparator(.hidden)
+                        .listRowSpacing(0)
+                        .listSectionSpacing(.custom(0))
+                        .padding(.top, 16)
+                        .safeAreaInset(edge: .bottom) {
+                            Color.clear.frame(height: 56 + 12 + 8)
+                        }
                     }
                 }
             }
@@ -111,7 +120,10 @@ struct CarriersListView: View {
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
-                Button { dismiss() } label: {
+                Button {
+                    filters.appliedFilters = nil
+                    dismiss()
+                } label: {
                     Image(systemName: "chevron.left")
                         .imageScale(.large)
                         .font(.system(size: 17, weight: .semibold))
@@ -121,9 +133,6 @@ struct CarriersListView: View {
         }
         .tint(.ypBlack)
         .toolbar(.hidden, for: .tabBar)
-        .onDisappear {
-            filters.appliedFilters = nil
-        }
         .task {
             guard !didLoadOnce else { return }
             didLoadOnce = true
@@ -141,24 +150,34 @@ struct CarriersListView: View {
         .disabled(vm.isChecking)
     }
     
-    private func matchTransfers(_ option: CarrierOption, _ filters: FiltersSelection) -> Bool {
-        guard let t = filters.transfers else { return true }
-        let hasTransfer = (option.transferNote != nil)
-        return t ? hasTransfer : !hasTransfer
+    private func applyFilters(_ options: [CarrierOption], _ selection: FiltersSelection?) -> [CarrierOption] {
+        guard let f = selection, f.canApply else { return options }
+        let byTransfers: [CarrierOption] = {
+            guard let t = f.transfers else { return options }
+            if t == true {
+                return options
+            } else {
+                return options.filter { !optionHasTransfer($0) }
+            }
+        }()
+        
+        if f.timeBands.isEmpty { return byTransfers }
+        return byTransfers.filter { opt in
+            guard let hour = parseHour(opt.depart) else { return false }
+            for band in f.timeBands {
+                switch band {
+                case .morning: if (6...11).contains(hour) { return true }
+                case .day:     if (12...17).contains(hour) { return true }
+                case .evening: if (18...23).contains(hour) { return true }
+                case .night:   if (0...5).contains(hour)   { return true }
+                }
+            }
+            return false
+        }
     }
     
-    private func matchTimeBands(_ option: CarrierOption, _ filters: FiltersSelection) -> Bool {
-        guard !filters.timeBands.isEmpty else { return true }
-        guard let hour = parseHour(option.depart) else { return false }
-        for band in filters.timeBands {
-            switch band {
-            case .morning: if (6...11).contains(hour) { return true }
-            case .day:     if (12...17).contains(hour) { return true }
-            case .evening: if (18...23).contains(hour) { return true }
-            case .night:   if (0...5).contains(hour)   { return true }
-            }
-        }
-        return false
+    private func optionHasTransfer(_ option: CarrierOption) -> Bool {
+        return option.transferNote != nil
     }
     
     private func parseHour(_ hhmm: String) -> Int? {
