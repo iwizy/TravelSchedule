@@ -73,7 +73,7 @@ struct GroupPlayerView: View {
                 Spacer(minLength: 0)
                 
                 if let t = medias[index].title, !t.isEmpty {
-                    Text(t)
+                    Text(LocalizedStringKey(t))
                         .font(.system(size: 34, weight: .heavy))
                         .foregroundStyle(.white)
                         .shadow(radius: 2)
@@ -84,7 +84,7 @@ struct GroupPlayerView: View {
                 }
                 
                 if let s = medias[index].subtitle, !s.isEmpty {
-                    Text(s)
+                    Text(LocalizedStringKey(s))
                         .font(.title3)
                         .foregroundStyle(.white.opacity(0.95))
                         .shadow(radius: 1)
