@@ -2,7 +2,7 @@
 //  SettingsView.swift
 //  TravelSchedule
 //
-//  Экран настроек
+//  Settings screen
 
 import SwiftUI
 
@@ -23,7 +23,7 @@ struct SettingsView: View {
             VStack(spacing: 0) {
                 VStack(spacing: 0) {
                     HStack(spacing: 12) {
-                        Text("Тёмная тема")
+                        Text(LocalizedStringKey("settings.dark"))
                             .font(.system(size: 17, weight: .regular))
                             .foregroundStyle(.ypBlack)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -39,7 +39,7 @@ struct SettingsView: View {
                         showAgreement = true
                     } label: {
                         HStack(spacing: 12) {
-                            Text("Пользовательское соглашение")
+                            Text(LocalizedStringKey("settings.agreement"))
                                 .font(.system(size: 17, weight: .regular))
                                 .foregroundStyle(.ypBlack)
                                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -58,12 +58,12 @@ struct SettingsView: View {
                 Spacer(minLength: 0)
                 
                 VStack(spacing: 8) {
-                    Text("Приложение использует API «Яндекс.Расписания»")
+                    Text(LocalizedStringKey("settings.api.title"))
                         .font(.system(size: 12, weight: .regular))
                         .foregroundStyle(.ypBlack)
                         .multilineTextAlignment(.center)
                     
-                    Text("Версия 1.0 (beta)")
+                    Text(LocalizedStringKey("settings.version"))
                         .font(.system(size: 12, weight: .regular))
                         .foregroundStyle(.ypBlack)
                 }
