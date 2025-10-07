@@ -140,7 +140,7 @@ struct MainView: View {
                             router.path.append(.city(.from))
                         } label: {
                             RouteTextRow(
-                                placeholder: "Откуда",
+                                placeholder: "main.from",
                                 valueText: fromTitle
                             )
                         }
@@ -150,7 +150,7 @@ struct MainView: View {
                             router.path.append(.city(.to))
                         } label: {
                             RouteTextRow(
-                                placeholder: "Куда",
+                                placeholder: "main.to",
                                 valueText: toTitle
                             )
                         }
@@ -189,7 +189,7 @@ struct MainView: View {
             let summary = RouteSummary(fromCity: fC, fromStation: fS, toCity: tC, toStation: tS)
             router.path.append(.carriers(summary))
         } label: {
-            Text("Найти")
+            Text(LocalizedStringKey("main.search"))
                 .font(.system(size: 17, weight: .bold))
                 .frame(width: 150, height: 60)
                 .foregroundStyle(.ypWhiteUniversal)
@@ -243,7 +243,8 @@ struct StoryCardView: View {
                 .stroke(isViewed ? Color.clear : Color.ypBlueUniversal, lineWidth: 4)
                 .frame(width: 92, height: 140)
             
-            Text(title)
+
+            Text(LocalizedStringKey(title))
                 .font(.footnote.weight(.regular))
                 .foregroundStyle(.ypWhiteUniversal)
                 .lineLimit(3)
@@ -262,7 +263,7 @@ private struct RouteTextRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             if valueText.isEmpty {
-                Text(placeholder)
+                Text(LocalizedStringKey(placeholder))
                     .font(.system(size: 17, weight: .regular))
                     .foregroundStyle(.ypGrayUniversal)
                     .tint(.ypGrayUniversal)
