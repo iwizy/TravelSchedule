@@ -1,0 +1,289 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "" : {
+
+    },
+    "•" : {
+
+    },
+    "main.from" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "From"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Откуда"
+          }
+        }
+      }
+    },
+    "main.search" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Найти"
+          }
+        }
+      }
+    },
+    "main.to" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Куда"
+          }
+        }
+      }
+    },
+    "settings.agreement" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User agreement"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пользовательское соглашение"
+          }
+        }
+      }
+    },
+    "settings.api.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The application uses the Yandex.Schedules API."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приложение использует API «Яндекс.Расписания»"
+          }
+        }
+      }
+    },
+    "settings.dark" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dark theme"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Темная тема"
+          }
+        }
+      }
+    },
+    "settings.version" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version 1.0 (beta)"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Версия 1.0 (beta)"
+          }
+        }
+      }
+    },
+    "stories.fifth" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dream trains"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поезда мечты"
+          }
+        }
+      }
+    },
+    "stories.first" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autumn routes"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Осенние маршруты"
+          }
+        }
+      }
+    },
+    "stories.fourth" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New routes"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Новые направления"
+          }
+        }
+      }
+    },
+    "stories.second" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Where to meet the dawn"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Где встретить рассвет"
+          }
+        }
+      }
+    },
+    "stories.slide_prefix" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Slide"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Слайд"
+          }
+        }
+      }
+    },
+    "stories.slide_x_of_y" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$d of %2$d"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$d из %2$d"
+          }
+        }
+      }
+    },
+    "stories.third" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weekend escapes"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weekend-побеги"
+          }
+        }
+      }
+    },
+    "Вариантов нет" : {
+
+    },
+    "Время отправления" : {
+
+    },
+    "Выбор города" : {
+
+    },
+    "Выбор станции" : {
+
+    },
+    "Город не найден" : {
+
+    },
+    "Загрузка" : {
+
+    },
+    "Настройки" : {
+
+    },
+    "Показывать варианты с пересадками" : {
+
+    },
+    "Пользовательское соглашение" : {
+
+    },
+    "Применить" : {
+
+    },
+    "Станции не найдены" : {
+
+    },
+    "Уточнить время" : {
+
+    },
+    "Уточнить время, фильтры применены" : {
+
+    }
+  },
+  "version" : "1.1"
+}
