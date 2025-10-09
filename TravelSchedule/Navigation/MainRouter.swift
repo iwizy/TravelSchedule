@@ -2,10 +2,10 @@
 //  MainRouter.swift
 //  TravelSchedule
 //
-//  Роутер
 
 import SwiftUI
 
+@MainActor
 final class MainRouter: ObservableObject {
     @Published var path: [MainRoute] = []
 }

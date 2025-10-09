@@ -2,8 +2,6 @@
 //  NearestStationsService.swift
 //  TravelSchedule
 //
-//  Created by Alexander Agafonov on 23.08.2025.
-//
 
 import OpenAPIRuntime
 import OpenAPIURLSession

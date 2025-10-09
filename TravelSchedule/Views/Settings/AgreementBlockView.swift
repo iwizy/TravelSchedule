@@ -2,7 +2,6 @@
 //  AgreementBlockView.swift
 //  TravelSchedule
 //
-//  Блок просмотра соглашения
 
 import SwiftUI
 

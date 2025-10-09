@@ -2,7 +2,6 @@
 //  GroupPlayerView.swift
 //  TravelSchedule
 //
-//  Плеер группы сториз
 
 import SwiftUI
 

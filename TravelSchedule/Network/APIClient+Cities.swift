@@ -2,7 +2,6 @@
 //  APIClient+Cities.swift
 //  TravelSchedule
 //
-//  Сервис поиска городов
 
 import Foundation
 

@@ -2,7 +2,6 @@
 //  StoriesMocks.swift
 //  TravelSchedule
 //
-//  Mocks for stories
 
 import Foundation
 

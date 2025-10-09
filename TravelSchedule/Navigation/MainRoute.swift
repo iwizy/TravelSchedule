@@ -2,7 +2,6 @@
 //  MainRoute.swift
 //  TravelSchedule
 //
-//  Типы навигации
 
 import Foundation
 

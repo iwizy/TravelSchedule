@@ -2,7 +2,6 @@
 //  APIClient+Environment.swift
 //  TravelSchedule
 //
-//  Расширение клиента
 
 import SwiftUI
 

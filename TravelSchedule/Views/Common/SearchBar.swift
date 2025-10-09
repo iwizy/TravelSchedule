@@ -2,7 +2,6 @@
 //  SearchBar.swift
 //  TravelSchedule
 //
-//  Компонент поиска
 
 import SwiftUI
 

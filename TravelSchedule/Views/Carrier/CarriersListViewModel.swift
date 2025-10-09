@@ -2,7 +2,6 @@
 //  CarriersListViewModel.swift
 //  TravelSchedule
 //
-//  ВМ для экрана списка перевозчиков
 
 import Foundation
 

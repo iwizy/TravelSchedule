@@ -2,7 +2,6 @@
 //  CarrierInfoView.swift
 //  TravelSchedule
 //
-//  Экран информации о перевозчике
 
 import SwiftUI
 

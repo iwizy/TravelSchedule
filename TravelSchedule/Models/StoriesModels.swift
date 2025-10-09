@@ -2,7 +2,6 @@
 //  StoriesModels.swift
 //  TravelSchedule
 //
-//  Модель историй
 
 import Foundation
 

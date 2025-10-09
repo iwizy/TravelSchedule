@@ -3,7 +3,6 @@
 //  TravelSchedule
 //
 
-
 import SwiftUI
 
 public struct FiltersSelection: Hashable {

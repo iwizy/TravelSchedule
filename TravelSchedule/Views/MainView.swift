@@ -2,7 +2,6 @@
 //  MainView.swift
 //  TravelSchedule
 //
-//  Главный экран
 
 import SwiftUI
 

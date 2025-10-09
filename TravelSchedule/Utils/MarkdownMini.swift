@@ -2,8 +2,6 @@
 //  MarkdownMini.swift
 //  TravelSchedule
 //
-//  Парсер markdown
-
 
 import Foundation
 

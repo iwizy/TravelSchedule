@@ -2,7 +2,6 @@
 //  SettingsViewModel.swift
 //  TravelSchedule
 //
-//  Модель экрана настроек
 
 import SwiftUI
 import Combine
@@ -15,6 +14,7 @@ protocol ThemeControlling {
     func bindToSystem(_ system: ColorScheme)
 }
 
+@MainActor
 final class SettingsViewModel: ObservableObject {
     @Published var isDark: Bool = false
     @Published var showAgreement: Bool = false

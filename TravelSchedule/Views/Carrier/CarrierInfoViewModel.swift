@@ -2,11 +2,11 @@
 //  CarrierInfoViewModel.swift
 //  TravelSchedule
 //
-//  Вью модель перевозчика
 
 import SwiftUI
 import Combine
 
+@MainActor
 final class CarrierInfoViewModel: ObservableObject {
     @Published private(set) var carrier: Carrier
     @Published var title: String = "Информация о перевозчике"

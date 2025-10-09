@@ -2,11 +2,11 @@
 //  CarriersFilterModel.swift
 //  TravelSchedule
 //
-//  Модель фильтров перевозчика
 
 import SwiftUI
 import Combine
 
+@MainActor
 final class CarriersFilterModel: ObservableObject {
     @Published var appliedFilters: FiltersSelection? = nil
 }

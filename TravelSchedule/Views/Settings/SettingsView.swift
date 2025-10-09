@@ -2,7 +2,6 @@
 //  SettingsView.swift
 //  TravelSchedule
 //
-//  Settings screen
 
 import SwiftUI
 

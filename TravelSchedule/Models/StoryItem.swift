@@ -2,7 +2,6 @@
 //  StoryItem.swift
 //  TravelSchedule
 //
-//  Модель элемента историй
 
 import Foundation
 

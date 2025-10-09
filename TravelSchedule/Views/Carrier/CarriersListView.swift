@@ -3,7 +3,6 @@
 //  TravelSchedule
 //
 
-
 import SwiftUI
 
 struct CarriersListView: View {

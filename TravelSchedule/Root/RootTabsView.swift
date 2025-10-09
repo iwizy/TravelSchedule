@@ -2,7 +2,6 @@
 //  RootTabsView.swift
 //  TravelSchedule
 //
-//  Вью ТабБара
 
 import SwiftUI
 

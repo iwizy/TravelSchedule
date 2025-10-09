@@ -2,7 +2,6 @@
 //  City.swift
 //  TravelSchedule
 //
-//  Модель города
 
 import Foundation
 

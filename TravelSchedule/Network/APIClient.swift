@@ -2,7 +2,6 @@
 //  APIClient.swift
 //  TravelSchedule
 //
-//  Клиент API
 
 import Foundation
 import OpenAPIRuntime

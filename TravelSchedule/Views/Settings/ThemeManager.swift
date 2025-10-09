@@ -2,12 +2,12 @@
 //  ThemeManager.swift
 //  TravelSchedule
 //
-//  Менеджер темы
 
 import SwiftUI
 
 enum ThemeOverride: String { case light, dark }
 
+@MainActor
 final class ThemeManager: ObservableObject {
     @AppStorage("app.themeOverride") private var storedOverride: String?
     @Published private(set) var override: ThemeOverride?

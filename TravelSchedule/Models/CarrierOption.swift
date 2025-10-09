@@ -2,7 +2,6 @@
 //  CarrierOption.swift
 //  TravelSchedule
 //
-//  Модель перевозчиков
 
 import Foundation
 

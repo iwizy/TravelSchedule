@@ -2,7 +2,6 @@
 //  StationPickerViewModel.swift
 //  TravelSchedule
 //
-//  ВМ экрана станций
 
 import Foundation
 

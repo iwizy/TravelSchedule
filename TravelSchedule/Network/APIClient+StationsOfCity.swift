@@ -2,7 +2,6 @@
 //  APIClient+StationsOfCity.swift
 //  TravelSchedule
 //
-//  Загрузка станций выбранного города
 
 import Foundation
 

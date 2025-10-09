@@ -2,8 +2,6 @@
 //  SearchService.swift
 //  TravelSchedule
 //
-//  Created by Alexander Agafonov on 23.08.2025.
-//
 
 import Foundation
 import OpenAPIRuntime

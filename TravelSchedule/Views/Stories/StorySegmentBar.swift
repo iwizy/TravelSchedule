@@ -2,7 +2,6 @@
 //  StorySegmentBar.swift
 //  TravelSchedule
 //
-//  Сегмент статус-бара сториз
 
 import SwiftUI
 

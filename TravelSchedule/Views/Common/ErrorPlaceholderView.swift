@@ -2,7 +2,6 @@
 //  ErrorPlaceholderView.swift
 //  TravelSchedule
 //
-//  Экран ошибок
 
 import SwiftUI
 

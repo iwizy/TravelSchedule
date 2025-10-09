@@ -2,7 +2,6 @@
 //  APIClient+Between.swift
 //  TravelSchedule
 //
-//  Поиск расписаний между станциями
 
 import Foundation
 

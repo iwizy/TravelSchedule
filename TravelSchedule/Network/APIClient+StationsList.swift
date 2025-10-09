@@ -2,7 +2,6 @@
 //  APIClient+StationsList.swift
 //  TravelSchedule
 //
-//  Сервис списка станция
 
 import Foundation
 import OpenAPIRuntime

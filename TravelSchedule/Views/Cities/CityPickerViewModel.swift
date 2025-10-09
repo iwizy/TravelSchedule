@@ -2,7 +2,6 @@
 //  CityPickerViewModel.swift
 //  TravelSchedule
 //
-//  Вьюмодель экрана выбора города
 
 import Foundation
 

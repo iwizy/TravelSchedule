@@ -2,10 +2,10 @@
 //  StoriesViewedStore.swift
 //  TravelSchedule
 //
-//  Хранилище просмотренных историй
 
 import SwiftUI
 
+@MainActor
 final class StoriesViewedStore: ObservableObject {
     @Published private(set) var viewedMedia = Set<UUID>()
     @Published private(set) var lastIndexByGroup: [UUID:Int] = [:]

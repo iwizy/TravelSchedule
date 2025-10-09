@@ -2,7 +2,6 @@
 //  Station.swift
 //  TravelSchedule
 //
-//  Модель станции
 
 import Foundation
 

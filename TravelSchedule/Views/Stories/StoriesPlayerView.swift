@@ -2,7 +2,6 @@
 //  StoriesPlayerView.swift
 //  TravelSchedule
 //
-//  Плеер сториз
 
 import SwiftUI
 

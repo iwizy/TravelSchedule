@@ -2,7 +2,6 @@
 //  StoriesFullScreenView.swift
 //  TravelSchedule
 //
-// Экран просмотра историй
 
 import SwiftUI
 
