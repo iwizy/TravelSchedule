@@ -2,7 +2,7 @@
 //  CityPickerView.swift
 //  TravelSchedule
 //
-//  Экран выбора города
+
 
 import SwiftUI
 
@@ -28,7 +28,7 @@ struct CityPickerView: View {
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
-                SearchBar(text: $query, placeholder: "Введите запрос")
+                SearchBar(text: $query, placeholder: String(localized: "city.search.placeholder"))
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
                     .padding(.bottom, 4)
@@ -59,7 +59,7 @@ struct CityPickerView: View {
                     }
                     
                     if filteredCities.isEmpty && !query.isEmpty && !viewModel.isLoading {
-                        Text("Город не найден")
+                        Text(LocalizedStringKey("city.picker.not.found"))
                             .font(.system(size: 24, weight: .bold))
                             .foregroundStyle(.ypBlack)
                             .multilineTextAlignment(.center)
@@ -69,7 +69,7 @@ struct CityPickerView: View {
                     }
                 }
             }
-            .navigationTitle("Выбор города")
+            .navigationTitle(LocalizedStringKey("city.picker.title"))
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarBackButtonHidden(true)
             .toolbar {

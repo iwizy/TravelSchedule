@@ -2,7 +2,6 @@
 //  StationPickerView.swift
 //  TravelSchedule
 //
-//  Экран выбора станции
 
 import SwiftUI
 
@@ -29,7 +28,7 @@ struct StationPickerView: View {
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
-                SearchBar(text: $query, placeholder: "Введите запрос")
+                SearchBar(text: $query, placeholder: String(localized: "station.search.placeholder"))
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
                     .padding(.bottom, 4)
@@ -60,7 +59,7 @@ struct StationPickerView: View {
                     }
                     
                     if filteredStations.isEmpty && !query.isEmpty && !viewModel.isLoading {
-                        Text("Станции не найдены")
+                        Text(LocalizedStringKey("station.picker.not.found"))
                             .font(.system(size: 24, weight: .bold))
                             .foregroundStyle(.ypBlack)
                             .multilineTextAlignment(.center)
@@ -70,7 +69,7 @@ struct StationPickerView: View {
                     }
                 }
             }
-            .navigationTitle("Выбор станции")
+            .navigationTitle(LocalizedStringKey("station.picker.title"))
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarBackButtonHidden(true)
             .toolbar {

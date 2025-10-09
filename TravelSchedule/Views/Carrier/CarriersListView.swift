@@ -2,7 +2,7 @@
 //  CarriersListView.swift
 //  TravelSchedule
 //
-//  Экран списка перевозчиков
+
 
 import SwiftUI
 
@@ -43,7 +43,7 @@ struct CarriersListView: View {
                     Color.clear.frame(height: 56 + 12 + 8)
                 } else if vm.hasAvailability == false {
                     Spacer()
-                    Text("Вариантов нет")
+                    Text(LocalizedStringKey("carrier.no.options"))
                         .font(.system(size: 24, weight: .bold))
                         .foregroundStyle(.ypBlack)
                         .multilineTextAlignment(.center)
@@ -54,7 +54,7 @@ struct CarriersListView: View {
                 } else {
                     if filteredOptions.isEmpty {
                         Spacer()
-                        Text("Вариантов нет")
+                        Text(LocalizedStringKey("carrier.no.options"))
                             .font(.system(size: 24, weight: .bold))
                             .foregroundStyle(.ypBlack)
                             .multilineTextAlignment(.center)
@@ -92,7 +92,7 @@ struct CarriersListView: View {
                 router.path.append(.filters)
             } label: {
                 HStack(spacing: 8) {
-                    Text("Уточнить время")
+                    Text(LocalizedStringKey("carrier.list.button"))
                         .font(.system(size: 17, weight: .bold))
                     
                     if hasActiveFilters {
@@ -113,7 +113,6 @@ struct CarriersListView: View {
             .padding(.horizontal, 16)
             .padding(.bottom, 12)
             .animation(.snappy, value: hasActiveFilters)
-            .accessibilityLabel(Text(hasActiveFilters ? "Уточнить время, фильтры применены" : "Уточнить время"))
         }
         
         .navigationBarTitleDisplayMode(.inline)

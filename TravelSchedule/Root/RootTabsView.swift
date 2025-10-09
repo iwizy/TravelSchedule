@@ -34,7 +34,7 @@ struct RootTabsView: View {
             
             NavigationStack(path: $settingsPath) {
                 SettingsView()
-                    .navigationTitle("Настройки")
+                    .navigationTitle(LocalizedStringKey("settings.title"))
                     .navigationBarTitleDisplayMode(.inline)
             }
             .tabItem { Image("TabIconSettings") }

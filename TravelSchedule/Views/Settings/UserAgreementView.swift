@@ -2,7 +2,6 @@
 //  UserAgreementView.swift
 //  TravelSchedule
 //
-//  Экран отображения соглашения
 
 import SwiftUI
 
@@ -23,7 +22,7 @@ struct UserAgreementView: View {
             .scrollContentBackground(.hidden)
             .background(Color.ypWhite.ignoresSafeArea())
             .tint(.ypBlueUniversal)
-            .navigationTitle("Пользовательское соглашение")
+            .navigationTitle(LocalizedStringKey("settings.agreement"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
@@ -40,7 +39,6 @@ struct UserAgreementView: View {
         guard let url = Bundle.main.url(forResource: "UserAgreement", withExtension: "md"),
               let md = try? String(contentsOf: url, encoding: .utf8)
         else {
-            blocks = [.paragraph([.text("Не удалось загрузить документ.")])]
             return
         }
         blocks = MarkdownMini.parse(md)

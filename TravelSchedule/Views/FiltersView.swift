@@ -2,7 +2,6 @@
 //  FiltersView.swift
 //  TravelSchedule
 //
-//  Экран фильтров
 
 import SwiftUI
 
@@ -36,7 +35,7 @@ struct FiltersView: View {
                         .listRowSeparator(.hidden)
                         .listRowInsets(.init(top: 0, leading: 16, bottom: 16, trailing: 16))
                 } header: {
-                    Text("Время отправления")
+                    Text(LocalizedStringKey("filters.depart"))
                         .font(.system(size: 24, weight: .bold))
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.vertical, 0)
@@ -46,18 +45,18 @@ struct FiltersView: View {
                 .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 16, trailing: 16))
 
                 Section {
-                    radioRow(title: "Да",   isSelected: selection.transfers == true)  { selection.transfers = true  }
+                    radioRow(title: String(localized: "filters.transfer.yes"),   isSelected: selection.transfers == true)  { selection.transfers = true  }
                         .listRowSeparator(.hidden)
                         .frame(height: 60)
                         .listRowInsets(.init(top: 0, leading: 16, bottom: 0, trailing: 16))
 
-                    radioRow(title: "Нет",  isSelected: selection.transfers == false) { selection.transfers = false }
+                    radioRow(title: String(localized: "filters.transfer.no"),  isSelected: selection.transfers == false) { selection.transfers = false }
                         .listRowSeparator(.hidden)
                         .frame(height: 60)
                         .listRowInsets(.init(top: 0, leading: 16, bottom: 0, trailing: 16))
 
                 } header: {
-                    Text("Показывать варианты с пересадками")
+                    Text(LocalizedStringKey("filters.transfer.title"))
                         .font(.system(size: 24, weight: .bold))
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.vertical, 0)
@@ -74,7 +73,7 @@ struct FiltersView: View {
                 Button {
                     onApply(selection)
                 } label: {
-                    Text("Применить")
+                    Text(LocalizedStringKey("filters.transfer.apply"))
                         .font(.system(size: 17, weight: .bold))
                         .frame(maxWidth: .infinity, minHeight: 60)
                         .foregroundStyle(.ypWhiteUniversal)

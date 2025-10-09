@@ -2,7 +2,7 @@
 //  FiltersSelection.swift
 //  TravelSchedule
 //
-//  Модель фильтров
+
 
 import SwiftUI
 
@@ -11,10 +11,10 @@ public struct FiltersSelection: Hashable {
         case morning, day, evening, night
         public var title: String {
             switch self {
-            case .morning: return "Утро 06:00 – 12:00"
-            case .day:     return "День 12:00 – 18:00"
-            case .evening: return "Вечер 18:00 – 00:00"
-            case .night:   return "Ночь 00:00 – 06:00"
+            case .morning: return String(localized: "filters.morning")
+            case .day:     return String(localized: "filters.day")
+            case .evening: return String(localized: "filters.evening")
+            case .night:   return String(localized: "filters.night")
             }
         }
     }

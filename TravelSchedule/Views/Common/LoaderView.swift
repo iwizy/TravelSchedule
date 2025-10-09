@@ -2,7 +2,6 @@
 //  LoaderView.swift
 //  TravelSchedule
 //
-//  Лоудер
 
 import SwiftUI
 
@@ -17,6 +16,5 @@ struct LoaderView: View {
             .animation(.linear(duration: 1).repeatForever(autoreverses: false), value: spinning)
             .onAppear { spinning = true }
             .onDisappear { spinning = false }
-            .accessibilityLabel("Загрузка")
     }
 }
