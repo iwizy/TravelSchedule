@@ -2,8 +2,6 @@
 //  TravelScheduleApp.swift
 //  TravelSchedule
 //
-//  Created by Alexander Agafonov on 23.08.2025.
-//
 
 import SwiftUI
 
@@ -12,8 +10,8 @@ struct TravelScheduleApp: App {
     @StateObject private var themeManager = ThemeManager()
     
     private let apiClient = APIClient(
-        serverURL: URL(string: Constants.apiURL)!,
-        apikey: Constants.apiKey
+        apikey: Constants.apiKey,
+        serverURL: URL(string: Constants.apiURL)!
     )
     
     init() {
@@ -55,3 +53,4 @@ struct TravelScheduleApp: App {
         }
     }
 }
+

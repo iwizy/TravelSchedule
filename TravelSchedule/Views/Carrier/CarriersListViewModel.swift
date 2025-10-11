@@ -11,7 +11,7 @@ final class CarriersListViewModel: ObservableObject {
     @Published var isChecking: Bool = false
     @Published var hasAvailability: Bool? = nil
     
-    private var cityToStationsCache: [String: [Station]] = [:]
+    private var cityToStationsCache: [String: [APIClient.StationLite]] = [:]
     private var segments: [APIClient.BetweenSegment] = []
     
     init() {
@@ -144,7 +144,7 @@ final class CarriersListViewModel: ObservableObject {
             return code
         }
         
-        let stations = try await apiClient.getStationsOfCity(cityId: "", cityTitle: cityTitle)
+        let stations = try await apiClient.getStationsOfCity(cityTitle: cityTitle, cityId: "")
         cityToStationsCache[key] = stations
         
         let code = pickStationCode(in: stations, stationTitle: stationTitle)
@@ -152,7 +152,7 @@ final class CarriersListViewModel: ObservableObject {
         return code
     }
     
-    private func pickStationCode(in stations: [Station], stationTitle: String) -> String? {
+    private func pickStationCode(in stations: [APIClient.StationLite], stationTitle: String) -> String? {
         if let exact = stations.first(where: {
             $0.title.compare(stationTitle, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame
         }) { return exact.id }

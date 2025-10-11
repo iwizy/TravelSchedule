@@ -7,8 +7,8 @@ import SwiftUI
 
 private struct APIClientKey: EnvironmentKey {
     static let defaultValue: APIClient = APIClient(
-        serverURL: URL(string: Constants.apiURL)!,
-        apikey: Constants.apiKey
+        apikey: Constants.apiKey,
+        serverURL: URL(string: Constants.apiURL)!
     )
 }
 
@@ -18,3 +18,4 @@ extension EnvironmentValues {
         set { self[APIClientKey.self] = newValue }
     }
 }
+
