@@ -16,175 +16,126 @@ extension APIClient {
         let cityId: String?
     }
     
-    private func normalizeCity(_ s: String?) -> String {
-        let base = (s ?? "")
-            .lowercased()
-            .replacingOccurrences(of: "ё", with: "е")
-            .replacingOccurrences(of: "й", with: "и")
-        let allowed = base.unicodeScalars.filter {
-            CharacterSet.alphanumerics.union(CharacterSet(charactersIn: " -")).contains($0)
-        }
-        let joined = String(String.UnicodeScalarView(allowed))
-        return joined
-            .replacingOccurrences(of: " ", with: "")
-            .replacingOccurrences(of: "-", with: "")
-    }
-    
-    private func resolveSettlement(
-        catalog: Components.Schemas.AllStationsResponse,
-        cityId: String?,
-        cityTitle: String?
-    ) -> Components.Schemas.Settlement? {
-        let wantedId = (cityId ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        let wantedTitleRaw = (cityTitle ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        let wanted = wantedTitleRaw.lowercased()
-        let wantedNorm = normalizeCity(wantedTitleRaw)
+    func getStationsOfCity(
+        cityTitle: String,
+        cityId: String?
+    ) async throws -> [StationLite] {
         
-        func loop(_ block: (Components.Schemas.Settlement) -> Bool) -> Components.Schemas.Settlement? {
-            for country in (catalog.countries ?? []) {
-                for region in (country.regions ?? []) {
-                    for settlement in (region.settlements ?? []) {
-                        if block(settlement) { return settlement }
+        try await logRequest("stations_of_city", params: [
+            "cityTitle": cityTitle,
+            "cityId": cityId ?? ""
+        ]) {
+            let catalog = try await getStationsListCached()
+            let countries = catalog.countries ?? []
+            
+            func normalizeCityCode(_ raw: String?) -> String? {
+                guard var s = raw?.trimmingCharacters(in: .whitespacesAndNewlines),
+                      !s.isEmpty else { return nil }
+                while let first = s.first, first.isLetter { s.removeFirst() }
+                return s.isEmpty ? nil : s
+            }
+            
+            func normalizeStationCode(_ raw: String?) -> String? {
+                guard let raw, !raw.isEmpty else { return nil }
+                let digits = raw.filter(\.isNumber)
+                guard !digits.isEmpty else { return nil }
+                return "s\(digits)"
+            }
+            
+            func makeStationLite(from st: Components.Schemas.Station, cityId: String?) -> StationLite? {
+                let rawCode = st.code
+                ?? st.codes?.yandex
+                ?? st.codes?.yandex_code
+                
+                guard let id = normalizeStationCode(rawCode) else { return nil }
+                
+                let title = (st.title ?? "—").trimmingCharacters(in: .whitespacesAndNewlines)
+                return StationLite(
+                    id: id,
+                    title: title,
+                    transportType: st.transport_type,
+                    stationType: st.station_type,
+                    lat: st.lat,
+                    lon: st.lng,
+                    cityId: cityId
+                )
+            }
+            
+            func collectStations(where predicate: (Components.Schemas.Settlement) -> Bool,
+                                 cityIdForResult: String?) -> ([StationLite], Int, Int) {
+                var acc: [StationLite] = []
+                var matchedSettlements = 0
+                var rawStationsSeen = 0
+                
+                for country in countries {
+                    for region in (country.regions ?? []) {
+                        for settlement in (region.settlements ?? []) where predicate(settlement) {
+                            matchedSettlements += 1
+                            let stations = settlement.stations ?? []
+                            rawStationsSeen += stations.count
+                            for st in stations {
+                                if let lite = makeStationLite(from: st, cityId: cityIdForResult) {
+                                    acc.append(lite)
+                                }
+                            }
+                        }
                     }
                 }
-            }
-            return nil
-        }
-        
-        if !wantedId.isEmpty, wantedId.hasPrefix("c"),
-           let s = loop({ $0.codes?.yandex_code == wantedId }) {
-            print("🔎 [API] settle resolve: by id=\(wantedId)")
-            return s
-        }
-        
-        if !wanted.isEmpty,
-           let s = loop({
-               ($0.title ?? "")
-                   .trimmingCharacters(in: .whitespacesAndNewlines)
-                   .lowercased() == wanted
-           }) {
-            print("🔎 [API] settle resolve: by exact title='\(wantedTitleRaw)'")
-            return s
-        }
-        
-        if !wanted.isEmpty,
-           let s = loop({
-               ($0.title ?? "")
-                   .trimmingCharacters(in: .whitespacesAndNewlines)
-                   .lowercased()
-                   .contains(wanted)
-           }) {
-            print("🔎 [API] settle resolve: by contains title='\(wantedTitleRaw)'")
-            return s
-        }
-        
-        if !wantedNorm.isEmpty,
-           let s = loop({ normalizeCity($0.title) == wantedNorm }) {
-            print("🔎 [API] settle resolve: by normalized title='\(wantedTitleRaw)'")
-            return s
-        }
-        
-        print("⚠️ [API] settle resolve failed for id='\(wantedId)' title='\(wantedTitleRaw)'")
-        return nil
-    }
-    
-    func getStationsOfCity(cityId: String) async throws -> [StationLite] {
-        return try await logRequest("stations_of_city", params: ["cityId": cityId]) {
-            
-            let catalog: Components.Schemas.AllStationsResponse
-            if let cached = self.getStationsListCachedV2() {
-                catalog = cached
-            } else {
-                let loaded = try await self.getStationsList(forceReload: false)
-                self.setStationsListCacheV2(loaded)
-                catalog = loaded
+                return (acc, matchedSettlements, rawStationsSeen)
             }
             
-            guard let settlement = self.resolveSettlement(catalog: catalog, cityId: cityId, cityTitle: nil) else {
-                print("❌ [API] stations_of_city: settlement not resolved for cityId=\(cityId)")
-                return []
-            }
-            
-            let stations: [Components.Schemas.Station] = settlement.stations ?? []
-            let withCode = stations.filter { ($0.codes?.yandex_code ?? "").isEmpty == false }.count
-            
-            let result: [StationLite] = stations.compactMap { st -> StationLite? in
-                let sCode = st.codes?.yandex_code ?? st.code
-                guard let s = sCode, !s.isEmpty else { return nil }
-                let title = st.title ?? "—"
-                return StationLite(
-                    id: s,
-                    title: title,
-                    transportType: nil,
-                    stationType: nil,
-                    lat: nil,
-                    lon: nil,
-                    cityId: settlement.codes?.yandex_code
-                )
-            }
-            
-            print("✅ [API] stations_of_city(cId=\(cityId)): '\(settlement.title ?? cityId)' total=\(stations.count) withCode=\(withCode) result=\(result.count)")
-            if result.isEmpty {
-                let sample = stations.prefix(10).map {
-                    "codes.yandex_code=\($0.codes?.yandex_code ?? "nil") code=\($0.code ?? "nil") title=\($0.title ?? "nil")"
+            let normalizedId = normalizeCityCode(cityId)
+            if let code = normalizedId {
+                let (byCode, matched, rawCount) = collectStations(where: { settlement in
+                    let sc = settlement.codes
+                    let sCode = sc?.yandex_code ?? sc?.yandex
+                    if let sCode, let norm = normalizeCityCode(sCode) {
+                        return norm == code
+                    }
+                    return false
+                }, cityIdForResult: code)
+                
+#if DEBUG
+                print("✅ [API] stations_of_city(\(code)) settlementsMatched=\(matched) rawStationsInMatched=\(rawCount) totalStations=\(byCode.count)")
+#endif
+                if !byCode.isEmpty {
+                    return byCode
                 }
-                print("🔍 [API] stations_of_city: sample(10)=\(sample)")
             }
-            return result
-        }
-    }
-    
-    
-    func getStationsOfCity(cityTitle: String, cityId: String) async throws -> [StationLite] {
-        if cityId.isEmpty == false {
-            return try await getStationsOfCity(cityId: cityId)
-        }
-        
-        let titleTrimmed = cityTitle.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard titleTrimmed.isEmpty == false else { return [] }
-        
-        return try await logRequest("stations_of_city", params: ["cityTitle": titleTrimmed]) {
             
-            let catalog: Components.Schemas.AllStationsResponse
-            if let cached = self.getStationsListCachedV2() {
-                catalog = cached
+            let qTitle = cityTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+            let qLower = qTitle.lowercased()
+            
+            let (byExact, exactMatched, exactRaw) = collectStations(where: { s in
+                let t = (s.title ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+                return t.compare(qTitle, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame
+            }, cityIdForResult: normalizedId)
+            
+            if !byExact.isEmpty {
+#if DEBUG
+                print("✅ [API] stations_of_city(exact '\(qTitle)') settlementsMatched=\(exactMatched) rawStationsInMatched=\(exactRaw) totalStations=\(byExact.count)")
+                let sample = byExact.prefix(10).map { "code=\($0.id) title='\($0.title)'" }
+                print("🔍 [API] stations_of_city sample(10)=\(sample)")
+#endif
+                return byExact
+            }
+            
+            let (byContains, containsMatched, containsRaw) = collectStations(where: { s in
+                let t = (s.title ?? "").trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+                return t.contains(qLower)
+            }, cityIdForResult: normalizedId)
+            
+#if DEBUG
+            if byContains.isEmpty {
+                print("⚠️ [API] stations_of_city: no stations found for \(qTitle)")
             } else {
-                let loaded = try await self.getStationsList(forceReload: false)
-                self.setStationsListCacheV2(loaded)
-                catalog = loaded
+                print("✅ [API] stations_of_city(contains '\(qTitle)') settlementsMatched=\(containsMatched) rawStationsInMatched=\(containsRaw) totalStations=\(byContains.count)")
+                let sample = byContains.prefix(10).map { "code=\($0.id) title='\($0.title)'" }
+                print("🔍 [API] stations_of_city sample(10)=\(sample)")
             }
+#endif
             
-            guard let settlement = self.resolveSettlement(catalog: catalog, cityId: nil, cityTitle: titleTrimmed) else {
-                print("❌ [API] stations_of_city: settlement not resolved for title='\(titleTrimmed)'")
-                return []
-            }
-            
-            let stations: [Components.Schemas.Station] = settlement.stations ?? []
-            let withCode = stations.filter { ($0.codes?.yandex_code ?? "").isEmpty == false }.count
-            
-            let result: [StationLite] = stations.compactMap { st -> StationLite? in
-                let sCode = st.codes?.yandex_code ?? st.code
-                guard let s = sCode, !s.isEmpty else { return nil }
-                let title = st.title ?? "—"
-                return StationLite(
-                    id: s,
-                    title: title,
-                    transportType: nil,
-                    stationType: nil,
-                    lat: nil,
-                    lon: nil,
-                    cityId: settlement.codes?.yandex_code
-                )
-            }
-            
-            print("✅ [API] stations_of_city(title='\(titleTrimmed)'): '\(settlement.title ?? titleTrimmed)' total=\(stations.count) withCode=\(withCode) result=\(result.count)")
-            if result.isEmpty {
-                let sample = stations.prefix(10).map {
-                    "codes.yandex_code=\($0.codes?.yandex_code ?? "nil") code=\($0.code ?? "nil") title=\($0.title ?? "nil")"
-                }
-                print("🔍 [API] stations_of_city(title): sample(10)=\(sample)")
-            }
-            return result
+            return byContains
         }
     }
 }

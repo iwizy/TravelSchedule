@@ -7,87 +7,65 @@ import Foundation
 
 extension APIClient {
     func getRussianCities() async throws -> [City] {
-        let all = try await getStationsListCached()
+        let catalog = try await getStationsListCached()
         
-        let ru = (all.countries ?? []).first { country in
-            let code = country.codes?.yandex_code ?? ""
-            if code == "225" || code == "c146" { return true }
-            return normalize(country.title ?? "").contains("росси")
-        }
+        let countries = catalog.countries ?? []
+        let ruCountry =
+        countries.first(where: { ($0.codes?.yandex == "225") }) ??
+        countries.first(where: { ($0.title ?? "").localizedCaseInsensitiveContains("росси") })
         
-        guard let country = ru else {
-            print("⚠️ [API] russian_cities: Russia not found in countries")
-            return []
-        }
+        guard let country = ruCountry else { return [] }
+        let countryTitle = (country.title ?? "").trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
         
-        var items: [City] = []
+        var seen = Set<String>()
+        var result: [City] = []
+        
         for region in (country.regions ?? []) {
-            let regionTitle = region.title ?? ""
+            let regionTitle = (region.title ?? "").trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
             
-            for settlement in (region.settlements ?? []) {
-                let titleFromStations = settlement.stations?.first?.title
-                let displayTitle = (settlement.title ?? titleFromStations ?? "—")
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !displayTitle.isEmpty else { continue }
+            for s in (region.settlements ?? []) {
+                guard
+                    let rawTitle = s.title?.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines),
+                    !rawTitle.isEmpty
+                else { continue }
                 
-                let id = makeCityID(
-                    countryTitle: country.title ?? "",
-                    regionTitle: regionTitle,
-                    settlement: settlement
-                )
+                let rawCode = (s.codes?.yandex_code ?? s.codes?.yandex)?
+                    .trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
                 
-                let types: Set<String> = Set((settlement.stations ?? []).compactMap { $0.transport_type })
+                guard let rawCode, !rawCode.isEmpty else { continue }
                 
-                items.append(
+                let cityId = rawCode.hasPrefix("c") ? rawCode : "c\(rawCode)"
+                guard seen.insert(cityId).inserted else { continue }
+                
+                var lat: Double? = nil
+                var lon: Double? = nil
+                if let stations = s.stations {
+                    if let st = stations.first(where: { $0.lat != nil && $0.lng != nil }) {
+                        lat = st.lat
+                        lon = st.lng
+                    }
+                }
+                
+                result.append(
                     City(
-                        id: id,
-                        title: displayTitle,
+                        id: cityId,
+                        title: rawTitle,
                         region: regionTitle,
-                        country: country.title,
-                        lat: nil,
-                        lon: nil,
-                        transportTypes: types
+                        country: countryTitle,
+                        lat: lat,
+                        lon: lon
                     )
                 )
             }
         }
         
-        var seen = Set<String>()
-        let unique = items.filter { city in
-            if seen.contains(city.id) { return false }
-            seen.insert(city.id)
-            return true
-        }
+        result.sort { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
         
-        let sorted = unique.sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
+#if DEBUG
+        let sample = result.prefix(10).map(\.title)
+        print("✅ [API] russian cities=\(result.count) sample(10)=\(sample) missingCodes=0")
+#endif
         
-        let sample = sorted.prefix(10).map { $0.title }.joined(separator: ", ")
-        print("ℹ️ [API] russian_cities total=\(items.count) unique=\(sorted.count); sample: \(sample)")
-        
-        return sorted
-    }
-    
-    func makeCityID(
-        countryTitle: String,
-        regionTitle: String,
-        settlement: Components.Schemas.Settlement
-    ) -> String {
-        if let code = settlement.codes?.yandex_code,
-           !code.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return code
-        }
-        let countryNorm = normalize(countryTitle)
-        let regionNorm  = normalize(regionTitle)
-        let title = (settlement.title ?? settlement.stations?.first?.title ?? "")
-        let settlNorm   = normalize(title)
-        return "\(countryNorm)|\(regionNorm)|\(settlNorm)"
-    }
-    
-    func normalize(_ s: String) -> String {
-        let yo = s.replacingOccurrences(of: "ё", with: "е").replacingOccurrences(of: "Ё", with: "Е")
-        return yo
-            .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: Locale(identifier: "ru_RU"))
-            .lowercased()
-            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return result
     }
 }

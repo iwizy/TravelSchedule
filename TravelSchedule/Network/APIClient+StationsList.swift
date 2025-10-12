@@ -4,64 +4,96 @@
 //
 
 import Foundation
+import OpenAPIRuntime
+import OpenAPIURLSession
 
 extension APIClient {
+    func getStationsList() async throws -> Components.Schemas.AllStationsResponse {
+        try await logRequest("stations_list", params: [
+            "lang": "ru_RU",
+            "format": "json"
+        ]) {
+            do {
+                let output = try await client.getStationsList(
+                    query: .init(
+                        lang: "ru_RU",
+                        format: "json"
+                    )
+                )
 
-    private static var __stationsListCacheV2: Components.Schemas.AllStationsResponse?
-    private static let __stationsListCacheLock = NSLock()
-
-    func getStationsListCachedV2() -> Components.Schemas.AllStationsResponse? {
-        Self.__stationsListCacheLock.lock()
-        defer { Self.__stationsListCacheLock.unlock() }
-        return Self.__stationsListCacheV2
-    }
-
-    func setStationsListCacheV2(_ value: Components.Schemas.AllStationsResponse) {
-        Self.__stationsListCacheLock.lock()
-        Self.__stationsListCacheV2 = value
-        Self.__stationsListCacheLock.unlock()
-    }
-
-    func invalidateStationsListCacheV2() {
-        setStationsListCacheV2(.init())
-    }
-
-    func getStationsList(forceReload: Bool = false) async throws -> Components.Schemas.AllStationsResponse {
-        if !forceReload, let cached = getStationsListCachedV2() {
-            return cached
-        }
-
-        return try await logRequest(
-            "stations_list",
-            params: ["format": "json", "lang": "ru_RU"]
-        ) {
-            var comps = URLComponents(url: self.serverURL, resolvingAgainstBaseURL: false)!
-            comps.path = "/v3.0/stations_list/"
-            comps.queryItems = [
-                URLQueryItem(name: "apikey", value: self.apikey),
-                URLQueryItem(name: "format", value: "json"),
-                URLQueryItem(name: "lang", value: "ru_RU"),
-            ]
-            guard let url = comps.url else { throw URLError(.badURL) }
-
-            print("🔎 [HTTP] stations_list → \(url.absoluteString)")
-
-            let (data, response) = try await URLSession.shared.data(from: url)
-            guard let http = response as? HTTPURLResponse else {
-                throw URLError(.badServerResponse)
-            }
-            guard (200..<300).contains(http.statusCode) else {
-                let body = String(data: data, encoding: .utf8) ?? ""
-                print("⚠️ [API] stations_list HTTP \(http.statusCode). Body:\n\(body)")
-                throw URLError(.badServerResponse)
+                switch output {
+                case .ok(let ok):
+                    switch ok.body {
+                    case .json(let model):
+#if DEBUG
+                        let count = model.countries?.count ?? 0
+                        print("ℹ️ [API] stations_list (codegen) countries=\(count)")
+#endif
+                        return model
+                    default:
+#if DEBUG
+                        print("⚠️ [API] stations_list: unexpected content type in codegen — fallback")
+#endif
+                        break
+                    }
+                default:
+#if DEBUG
+                    print("⚠️ [API] stations_list: non-200 in codegen — fallback")
+#endif
+                    break
+                }
+            } catch {
+#if DEBUG
+                print("⚠️ [API] stations_list codegen failed → fallback. error=\(error as NSError)")
+#endif
             }
 
-            let decoder = JSONDecoder()
-            let model = try decoder.decode(Components.Schemas.AllStationsResponse.self, from: data)
-            print("ℹ️ [API] stations_list countries=\(model.countries?.count ?? 0)")
-
-            setStationsListCacheV2(model)
-            return model
+            return try await Self.fetchStationsListFallback(
+                session: self.session,
+                apikey: self.apikey,
+                baseURLString: Constants.apiURL
+            )
         }
+    }
+
+    private static func fetchStationsListFallback(
+        session: URLSession,
+        apikey: String,
+        baseURLString: String
+    ) async throws -> Components.Schemas.AllStationsResponse {
+        guard var comps = URLComponents(string: baseURLString) else {
+            throw URLError(.badURL)
+        }
+        var path = comps.path
+        if !path.hasSuffix("/") { path.append("/") }
+        path.append("stations_list/")
+        comps.path = path
+
+        comps.queryItems = [
+            .init(name: "apikey", value: apikey),
+            .init(name: "format", value: "json"),
+            .init(name: "lang", value: "ru_RU")
+        ]
+
+        guard let url = comps.url else { throw URLError(.badURL) }
+
+#if DEBUG
+        print("🔎 [HTTP] stations_list → \(url.absoluteString)")
+#endif
+
+        let (data, response) = try await session.data(from: url)
+        guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
+            throw URLError(.badServerResponse)
+        }
+
+        let decoder = JSONDecoder()
+        let model = try decoder.decode(Components.Schemas.AllStationsResponse.self, from: data)
+
+#if DEBUG
+        let count = model.countries?.count ?? 0
+        print("ℹ️ [API] stations_list (fallback) countries=\(count)")
+#endif
+
+        return model
     }
 }

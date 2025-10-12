@@ -47,32 +47,59 @@ extension APIClient {
                 print("🔎 [HTTP] search → \(debugURL)")
             }
 #endif
-            
-            let output = try await client.getScheduleBetweenStations(
-                query: .init(
-                    from: from,
-                    to: to,
-                    date: DateFormatterManager.dateYMD.string(from: date),
-                    transport_types: transport,
-                    transfers: true,
-                    lang: "ru_RU",
-                    format: "json"
+            do {
+                let output = try await client.getScheduleBetweenStations(
+                    query: .init(
+                        from: from,
+                        to: to,
+                        date: DateFormatterManager.dateYMD.string(from: date),
+                        transport_types: transport,
+                        transfers: true,
+                        lang: "ru_RU",
+                        format: "json"
+                    )
                 )
-            )
-            
-            switch output {
-            case .ok(let ok):
-                switch ok.body {
-                case .json(let model):
-                    let segments = Self.mapSegmentsResponse(model)
+                
+                switch output {
+                case .ok(let ok):
+                    switch ok.body {
+                    case .json(let model):
+                        let segments = Self.mapSegmentsResponse(model)
 #if DEBUG
-                    print("📦 [SEARCH] decoded segments=\(segments.count)")
+                        print("📦 [SEARCH] decoded via codegen, segments=\(segments.count)")
 #endif
-                    return segments
+                        return segments
+                    default:
+#if DEBUG
+                        print("⚠️ [API] between: unexpected content type in codegen response — fallback")
+#endif
+                        break
+                    }
+                default:
+#if DEBUG
+                    print("⚠️ [API] between: non-200 in codegen — fallback")
+#endif
+                    break
                 }
-            default:
-                throw URLError(.badServerResponse)
+            } catch {
+#if DEBUG
+                print("⚠️ [API] between codegen failed → fallback. error=\(error as NSError)")
+#endif
             }
+            
+            let fallbackSegments = try await Self.fetchBetweenFallback(
+                session: self.session,
+                apikey: self.apikey,
+                baseURLString: Constants.apiURL,
+                from: from,
+                to: to,
+                date: DateFormatterManager.dateYMD.string(from: date),
+                transportTypes: transport
+            )
+#if DEBUG
+            print("📦 [SEARCH] decoded via fallback, segments=\(fallbackSegments.count)")
+#endif
+            return fallbackSegments
         }
     }
     
@@ -84,9 +111,7 @@ extension APIClient {
             guard
                 let dep = seg.departure,
                 let arr = seg.arrival
-            else {
-                return nil
-            }
+            else { return nil }
             
             var carrier = seg.thread?.carrier
             if carrier == nil, let details = seg.details {
@@ -118,6 +143,49 @@ extension APIClient {
                 carrierPhoneE164: nil
             )
         }
+    }
+    
+    private static func fetchBetweenFallback(
+        session: URLSession,
+        apikey: String,
+        baseURLString: String,
+        from: String,
+        to: String,
+        date: String,
+        transportTypes: String?
+    ) async throws -> [BetweenSegment] {
+        guard var comps = URLComponents(string: baseURLString) else {
+            throw URLError(.badURL)
+        }
+        var path = comps.path
+        if !path.hasSuffix("/") { path.append("/") }
+        path.append("search/")
+        comps.path = path
+        
+        var items: [URLQueryItem] = [
+            .init(name: "apikey", value: apikey),
+            .init(name: "from", value: from),
+            .init(name: "to", value: to),
+            .init(name: "date", value: date),
+            .init(name: "format", value: "json"),
+            .init(name: "lang", value: "ru_RU"),
+            .init(name: "transfers", value: "true")
+        ]
+        if let t = transportTypes, !t.isEmpty {
+            items.append(.init(name: "transport_types", value: t))
+        }
+        comps.queryItems = items
+        
+        guard let url = comps.url else { throw URLError(.badURL) }
+        let (data, response) = try await session.data(from: url)
+        
+        guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
+            throw URLError(.badServerResponse)
+        }
+        
+        let decoder = JSONDecoder()
+        let model = try decoder.decode(Components.Schemas.SegmentsResponse.self, from: data)
+        return mapSegmentsResponse(model)
     }
     
     private static func makeDebugSearchURL(

@@ -167,8 +167,6 @@ components:
           type: string
         duration:
           type: integer
-        is_transfer:
-          type: boolean
 
     Transfer:
       type: object
@@ -300,10 +298,6 @@ paths:
       security:
         - api_key: []
       parameters:
-        - name: apikey
-          in: query
-          required: true
-          schema: { type: string }
         - name: from
           in: query
           required: true
@@ -346,6 +340,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SegmentsResponse'
+            text/html:
+              schema:
+                $ref: '#/components/schemas/SegmentsResponse'
 
   /stations_list/:
     get:
@@ -355,10 +352,6 @@ paths:
       security:
         - api_key: []
       parameters:
-        - name: apikey
-          in: query
-          required: true
-          schema: { type: string }
         - name: lang
           in: query
           required: false
@@ -378,6 +371,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AllStationsResponse'
+            text/html:
+              schema:
+                $ref: '#/components/schemas/AllStationsResponse'
 
   /carrier/:
     get:
@@ -387,10 +383,6 @@ paths:
       security:
         - api_key: []
       parameters:
-        - name: apikey
-          in: query
-          required: true
-          schema: { type: string }
         - name: code
           in: query
           required: true
@@ -412,5 +404,8 @@ paths:
           description: Ok
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/Carrier'
+            text/html:
               schema:
                 $ref: '#/components/schemas/Carrier'

@@ -7,11 +7,12 @@ import Foundation
 import OpenAPIRuntime
 import OpenAPIURLSession
 
-final class APIClient {
+actor APIClient {
+    
     let apikey: String
     let serverURL: URL
+    let session: URLSession
     let client: Client
-    private let session: URLSession
     
     private var stationsListCache: Components.Schemas.AllStationsResponse?
     
@@ -23,7 +24,6 @@ final class APIClient {
         self.apikey = apikey
         self.serverURL = serverURL
         self.session = session
-        
         let transport = URLSessionTransport(configuration: .init(session: session))
         self.client = Client(
             serverURL: serverURL,
@@ -35,7 +35,7 @@ final class APIClient {
     func logRequest<T>(
         _ name: String,
         params: [String: Any] = [:],
-        _ work: () async throws -> T
+        _ work: @Sendable () async throws -> T
     ) async throws -> T {
 #if DEBUG
         let kv = params.map { "\($0.key)=\($0.value)" }.joined(separator: " ")
