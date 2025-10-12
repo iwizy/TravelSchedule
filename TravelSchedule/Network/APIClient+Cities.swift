@@ -60,12 +60,6 @@ extension APIClient {
         }
         
         result.sort { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
-        
-#if DEBUG
-        let sample = result.prefix(10).map(\.title)
-        print("✅ [API] russian cities=\(result.count) sample(10)=\(sample) missingCodes=0")
-#endif
-        
         return result
     }
 }

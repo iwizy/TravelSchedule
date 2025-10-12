@@ -37,23 +37,11 @@ actor APIClient {
         params: [String: Any] = [:],
         _ work: @Sendable () async throws -> T
     ) async throws -> T {
-#if DEBUG
-        let kv = params.map { "\($0.key)=\($0.value)" }.joined(separator: " ")
-        print("➡️ [API] \(name) start \(kv)")
-#endif
         let t0 = Date()
         do {
             let value = try await work()
-#if DEBUG
-            let dt = Date().timeIntervalSince(t0)
-            print("✅ [API] \(name) done (\(String(format: "%.3f", dt))s)")
-#endif
             return value
         } catch {
-#if DEBUG
-            let dt = Date().timeIntervalSince(t0)
-            print("❌ [API] \(name) error (\(String(format: "%.3f", dt))s): \(error as NSError)")
-#endif
             throw error
         }
     }

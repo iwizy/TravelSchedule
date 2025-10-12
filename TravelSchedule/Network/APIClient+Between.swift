@@ -33,20 +33,6 @@ extension APIClient {
             "date": DateFormatterManager.dateYMD.string(from: date),
             "transport": transport ?? "any"
         ]) {
-            
-#if DEBUG
-            if let debugURL = Self.makeDebugSearchURL(
-                baseURLString: Constants.apiURL,
-                apikey: apikey,
-                from: from,
-                to: to,
-                date: DateFormatterManager.dateYMD.string(from: date),
-                transportTypes: transport,
-                transfers: true
-            ) {
-                print("🔎 [HTTP] search → \(debugURL)")
-            }
-#endif
             do {
                 let output = try await client.getScheduleBetweenStations(
                     query: .init(
@@ -65,26 +51,14 @@ extension APIClient {
                     switch ok.body {
                     case .json(let model):
                         let segments = Self.mapSegmentsResponse(model)
-#if DEBUG
-                        print("📦 [SEARCH] decoded via codegen, segments=\(segments.count)")
-#endif
                         return segments
                     default:
-#if DEBUG
-                        print("⚠️ [API] between: unexpected content type in codegen response — fallback")
-#endif
                         break
                     }
                 default:
-#if DEBUG
-                    print("⚠️ [API] between: non-200 in codegen — fallback")
-#endif
                     break
                 }
             } catch {
-#if DEBUG
-                print("⚠️ [API] between codegen failed → fallback. error=\(error as NSError)")
-#endif
             }
             
             let fallbackSegments = try await Self.fetchBetweenFallback(
@@ -96,9 +70,6 @@ extension APIClient {
                 date: DateFormatterManager.dateYMD.string(from: date),
                 transportTypes: transport
             )
-#if DEBUG
-            print("📦 [SEARCH] decoded via fallback, segments=\(fallbackSegments.count)")
-#endif
             return fallbackSegments
         }
     }

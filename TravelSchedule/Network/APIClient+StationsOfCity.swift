@@ -95,9 +95,6 @@ extension APIClient {
                     return false
                 }, cityIdForResult: code)
                 
-#if DEBUG
-                print("✅ [API] stations_of_city(\(code)) settlementsMatched=\(matched) rawStationsInMatched=\(rawCount) totalStations=\(byCode.count)")
-#endif
                 if !byCode.isEmpty {
                     return byCode
                 }
@@ -112,11 +109,6 @@ extension APIClient {
             }, cityIdForResult: normalizedId)
             
             if !byExact.isEmpty {
-#if DEBUG
-                print("✅ [API] stations_of_city(exact '\(qTitle)') settlementsMatched=\(exactMatched) rawStationsInMatched=\(exactRaw) totalStations=\(byExact.count)")
-                let sample = byExact.prefix(10).map { "code=\($0.id) title='\($0.title)'" }
-                print("🔍 [API] stations_of_city sample(10)=\(sample)")
-#endif
                 return byExact
             }
             
@@ -124,17 +116,6 @@ extension APIClient {
                 let t = (s.title ?? "").trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
                 return t.contains(qLower)
             }, cityIdForResult: normalizedId)
-            
-#if DEBUG
-            if byContains.isEmpty {
-                print("⚠️ [API] stations_of_city: no stations found for \(qTitle)")
-            } else {
-                print("✅ [API] stations_of_city(contains '\(qTitle)') settlementsMatched=\(containsMatched) rawStationsInMatched=\(containsRaw) totalStations=\(byContains.count)")
-                let sample = byContains.prefix(10).map { "code=\($0.id) title='\($0.title)'" }
-                print("🔍 [API] stations_of_city sample(10)=\(sample)")
-            }
-#endif
-            
             return byContains
         }
     }
