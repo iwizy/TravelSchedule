@@ -90,41 +90,16 @@ final class CarriersListViewModel: ObservableObject {
                 self.hasAvailability = true
                 print("✅ [CarriersVM] base mapping done (\(segs.count)) → names/dates/times/duration/transfer/logoURL")
                 
-                let carrierCodes: [String] = segs.compactMap { $0.carrierCode }.uniqued()
-                if !carrierCodes.isEmpty {
-                    print("ℹ️ [CarriersVM] fetching carrier info for codes: \(carrierCodes)")
-                    
-                    var infoByCode: [String: APIClient.CarrierInfo] = [:]
-                    await withTaskGroup(of: (String, APIClient.CarrierInfo?).self) { group in
-                        for code in carrierCodes {
-                            group.addTask {
-                                do {
-                                    let info = try await apiClient.getCarrierInfo(code: code)
-                                    return (code, info)
-                                } catch {
-                                    print("⚠️ [CarriersVM] getCarrierInfo failed for code=\(code): \(error)")
-                                    return (code, nil)
-                                }
-                            }
-                        }
-                        for await (code, info) in group {
-                            if let info { infoByCode[code] = info }
-                        }
+                for (idx, seg) in segs.enumerated() {
+                    if let url = seg.carrierLogoURL {
+                        options[idx].logoURL = url
                     }
-                    
-                    for (idx, seg) in segs.enumerated() {
-                        guard let code = seg.carrierCode, let info = infoByCode[code] else { continue }
-                        options[idx].email = info.email
-                        options[idx].phoneE164 = info.phoneE164 ?? info.phone
-                        options[idx].phoneDisplay = info.phoneDisplay ?? info.phone
-                        if let url = info.logoURL {
-                            options[idx].logoURL = url
-                        }
-                    }
-                    print("✅ [CarriersVM] carrier contacts merged → options updated")
-                } else {
-                    print("ℹ️ [CarriersVM] no carrier codes in segments — skip contacts enrichment")
+                    options[idx].phoneE164 = seg.carrierPhoneE164 ?? seg.carrierPhone
+                    options[idx].phoneDisplay = seg.carrierPhone
+                    options[idx].email = seg.carrierEmail
                 }
+                
+                print("✅ [CarriersVM] carrier contacts merged directly from segments → options updated")
             }
             
         } catch {
@@ -134,6 +109,7 @@ final class CarriersListViewModel: ObservableObject {
             print("❌ [CarriersVM] real check error: \(error)")
         }
     }
+    
     
     private func resolveStationCode(apiClient: APIClient, cityTitle: String, stationTitle: String) async throws -> String? {
         let key = cityTitle.lowercased()
@@ -238,35 +214,6 @@ final class CarriersListViewModel: ObservableObject {
         seg.hasTransfer ? "С пересадкой" : nil
     }
     
-    private var demoOptions: [CarrierOption] = [
-        CarrierOption(
-            carrierName: "РЖД", logoName: "rzd_logo",
-            dateText: "14 января", depart: "06:15", arrive: "12:05",
-            durationText: "5 ч 50 м",
-            transferNote: nil,
-            email: "info@rzd.ru",
-            phoneE164: "+78007750000",
-            phoneDisplay: "8 800 775-00-00"
-        ),
-        CarrierOption(
-            carrierName: "ФГК", logoName: "fgk_logo",
-            dateText: "15 января", depart: "01:15", arrive: "09:00",
-            durationText: "7 ч 45 м",
-            transferNote: "С пересадкой в Твери",
-            email: "info@railfgk.ru",
-            phoneE164: "+78002504777",
-            phoneDisplay: "8-800-250-4777"
-        ),
-        CarrierOption(
-            carrierName: "Урал логистика", logoName: "ural_logo",
-            dateText: "16 января", depart: "12:30", arrive: "21:00",
-            durationText: "8 ч 30 м",
-            transferNote: nil,
-            email: "general@ulgroup.ru",
-            phoneE164: "+74957838383",
-            phoneDisplay: "+7 (495) 783-83-83"
-        )
-    ]
 }
 
 private extension Array where Element: Hashable {

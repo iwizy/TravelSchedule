@@ -204,34 +204,8 @@ private struct CarrierRow: View {
         VStack(spacing: 0) {
             ZStack(alignment: .topTrailing) {
                 HStack(spacing: 12) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(Color(.ypWhiteUniversal))
-                        
-                        Group {
-                            if let url = option.logoURL {
-                                AsyncImage(url: url) { phase in
-                                    switch phase {
-                                    case .success(let img):
-                                        img
-                                            .resizable()
-                                            .scaledToFit()
-                                    case .empty:
-                                        Color.clear
-                                    case .failure(_):
-                                        Color.clear
-                                    @unknown default:
-                                        Color.clear
-                                    }
-                                }
-                            } else {
-                                Color.clear
-                            }
-                        }
-                        .padding(6)
-                    }
-                    .frame(width: 38, height: 38)
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    logoView
+                        .frame(width: 38, height: 38)
                     
                     VStack(alignment: .leading, spacing: 4) {
                         Text(option.carrierName)
@@ -282,6 +256,38 @@ private struct CarrierRow: View {
                 .fill(Color(.ypLightGray))
         )
         .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+    }
+    
+    @ViewBuilder
+    private var logoView: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(Color.ypWhiteUniversal)
+            
+            if let url = option.logoURL {
+                AsyncImage(url: url, transaction: .init(animation: .easeInOut)) { phase in
+                    switch phase {
+                    case .empty:
+                        EmptyView()
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .scaledToFit()
+                            .padding(6)
+                            .transition(.opacity.combined(with: .scale))
+                    case .failure:
+                        EmptyView()
+                    @unknown default:
+                        EmptyView()
+                    }
+                }
+            } else {
+                EmptyView()
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .compositingGroup()
+        .drawingGroup(opaque: false)
     }
 }
 
