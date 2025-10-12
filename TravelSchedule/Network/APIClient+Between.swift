@@ -66,15 +66,25 @@ extension APIClient {
         
         try await logRequest("between (search)", params: [
             "from": from, "to": to,
-            "date": Self.dateYMD.string(from: date),
+            "date": DateFormatterManager.dateYMD.string(from: date),
             "transport": transport ?? "any"
         ]) {
-            var comps = URLComponents(string: "https://api.rasp.yandex.net/v3.0/search/")!
+            
+            guard var comps = URLComponents(string: Constants.apiURL) else {
+                throw URLError(.badURL)
+            }
+            
+            var path = comps.path
+            if !path.hasSuffix("/") { path.append("/") }
+            path.append("search/")
+            comps.path = path
+            
+            
             var items: [URLQueryItem] = [
                 URLQueryItem(name: "apikey", value: apikey),
                 URLQueryItem(name: "from", value: from),
                 URLQueryItem(name: "to", value: to),
-                URLQueryItem(name: "date", value: Self.dateYMD.string(from: date)),
+                URLQueryItem(name: "date", value: DateFormatterManager.dateYMD.string(from: date)),
                 URLQueryItem(name: "format", value: "json"),
                 URLQueryItem(name: "lang", value: "ru_RU"),
                 URLQueryItem(name: "transfers", value: "true")
@@ -86,7 +96,7 @@ extension APIClient {
             
 #if DEBUG
             if let fullURL = comps.url?.absoluteString {
-                print("🔎 [SEARCH URL] \(fullURL)")
+                print("🔎 [HTTP] search → \(fullURL)")
             }
 #endif
             
@@ -96,12 +106,11 @@ extension APIClient {
                 throw URLError(.badServerResponse)
             }
             
-            // Красивый JSON в консоль (на время отладки)
 #if DEBUG
-            if let jsonObject = try? JSONSerialization.jsonObject(with: data),
-               let prettyData = try? JSONSerialization.data(withJSONObject: jsonObject, options: .prettyPrinted),
-               let prettyString = String(data: prettyData, encoding: .utf8) {
-                print("📦 [SEARCH RESPONSE JSON]:\n\(prettyString)")
+            if let obj = try? JSONSerialization.jsonObject(with: data),
+               let pretty = try? JSONSerialization.data(withJSONObject: obj, options: .prettyPrinted),
+               let str = String(data: pretty, encoding: .utf8) {
+                print("📦 [SEARCH RESPONSE JSON]:\n\(str)")
             }
 #endif
             
@@ -118,7 +127,11 @@ extension APIClient {
                     carrier = details.first(where: { $0.thread?.carrier != nil })?.thread?.carrier
                 }
                 
-                let carrierTitle = carrier?.title ?? "—"
+                let hasTr: Bool = {
+                    if let v = seg.hasTransfers { return v }
+                    if let det = seg.details, det.contains(where: { $0.isTransfer == true }) { return true }
+                    return false
+                }()
                 
                 let logoURL: URL? = {
                     guard let raw = carrier?.logo, !raw.isEmpty else { return nil }
@@ -126,18 +139,10 @@ extension APIClient {
                     return URL(string: raw)
                 }()
                 
-                let code = carrier?.codes?.yandex
-                
-                let hasTr: Bool = {
-                    if let v = seg.hasTransfers { return v }
-                    if let det = seg.details, det.contains(where: { $0.isTransfer == true }) { return true }
-                    return false
-                }()
-                
                 return BetweenSegment(
-                    carrierName: carrierTitle,
+                    carrierName: carrier?.title ?? "—",
                     carrierLogoURL: logoURL,
-                    carrierCode: code,
+                    carrierCode: carrier?.codes?.yandex,
                     departureISO: dep,
                     arrivalISO: arr,
                     hasTransfer: hasTr,
@@ -146,16 +151,8 @@ extension APIClient {
                     carrierPhoneE164: nil
                 )
             }
+            
             return segments
         }
     }
-    
-    private static let dateYMD: DateFormatter = {
-        let f = DateFormatter()
-        f.calendar = Calendar(identifier: .gregorian)
-        f.locale = Locale(identifier: "ru_RU")
-        f.timeZone = .current
-        f.dateFormat = "yyyy-MM-dd"
-        return f
-    }()
 }

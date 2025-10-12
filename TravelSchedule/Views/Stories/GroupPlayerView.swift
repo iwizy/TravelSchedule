@@ -158,8 +158,6 @@ struct GroupPlayerView: View {
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in resume() }
     }
     
-    // MARK: - Навигация и прогресс
-    
     private func segmentState(for i: Int) -> StorySegmentBar.State {
         if i < index { return .past }
         if i == index { return .current }
