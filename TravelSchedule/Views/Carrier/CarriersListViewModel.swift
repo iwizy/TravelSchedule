@@ -11,8 +11,6 @@ final class CarriersListViewModel: ObservableObject {
     @Published var isChecking: Bool = false
     @Published var hasAvailability: Bool? = nil
     
-    @Published var serverError: Bool = false
-    
     private var cityToStationsCache: [String: [APIClient.StationLite]] = [:]
     private var segments: [APIClient.BetweenSegment] = []
     
@@ -24,7 +22,6 @@ final class CarriersListViewModel: ObservableObject {
         print("➡️ [CarriersVM] real check start summary=\(summary)")
         isChecking = true
         hasAvailability = nil
-        serverError = false
         defer { isChecking = false }
         
         let fromCity = summary.fromCity.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -53,7 +50,6 @@ final class CarriersListViewModel: ObservableObject {
                 print("⚠️ [CarriersVM] codes not resolved: from=\(String(describing: fCode)) to=\(String(describing: tCode))")
                 return
             }
-            
             let today = Date()
             let segs = try await apiClient.getSegmentsBetween(
                 from: fromCode,
@@ -66,9 +62,9 @@ final class CarriersListViewModel: ObservableObject {
             if segs.isEmpty {
                 self.options = []
                 self.hasAvailability = false
+                ErrorCenter.shared.serverError = false
                 print("✅ [CarriersVM] real check result: NOT FOUND")
             } else {
-                let fallbackLogoAsset = "rzd_logo"
                 let mapped: [CarrierOption] = segs.map { seg in
                     let dep = Self.formatTime(seg.departureISO)
                     let arr = Self.formatTime(seg.arrivalISO)
@@ -78,7 +74,7 @@ final class CarriersListViewModel: ObservableObject {
                     
                     return CarrierOption(
                         carrierName: seg.carrierName,
-                        logoName: fallbackLogoAsset,
+                        logoName: "",
                         dateText: dt,
                         depart: dep,
                         arrive: arr,
@@ -92,34 +88,18 @@ final class CarriersListViewModel: ObservableObject {
                 }
                 self.options = mapped
                 self.hasAvailability = true
-                print("✅ [CarriersVM] base mapping done (\(segs.count)) → names/dates/times/duration/transfer/logoURL")
-                
-                for (idx, seg) in segs.enumerated() {
-                    if let url = seg.carrierLogoURL {
-                        options[idx].logoURL = url
-                    }
-                    options[idx].phoneE164 = seg.carrierPhoneE164 ?? seg.carrierPhone
-                    options[idx].phoneDisplay = seg.carrierPhone
-                    options[idx].email = seg.carrierEmail
-                }
-                
-                print("✅ [CarriersVM] carrier contacts merged directly from segments → options updated")
+                ErrorCenter.shared.serverError = false
+                print("✅ [CarriersVM] options mapped (\(segs.count))")
             }
             
         } catch {
             self.segments = []
             self.options = []
             self.hasAvailability = false
-            
-            if let serverErr = error as? APIClient.ServerHTTPError {
-                self.serverError = true
-                print("❌ [CarriersVM] server error: HTTP \(serverErr.statusCode)")
-            } else {
-                print("❌ [CarriersVM] real check error: \(error)")
-            }
+            ErrorCenter.shared.serverError = true
+            print("❌ [CarriersVM] real check error: \(error)")
         }
     }
-    
     
     
     private func resolveStationCode(apiClient: APIClient, cityTitle: String, stationTitle: String) async throws -> String? {
@@ -224,6 +204,7 @@ final class CarriersListViewModel: ObservableObject {
     private static func transferNote(from seg: APIClient.BetweenSegment) -> String? {
         seg.hasTransfer ? "С пересадкой" : nil
     }
+    
 }
 
 private extension Array where Element: Hashable {

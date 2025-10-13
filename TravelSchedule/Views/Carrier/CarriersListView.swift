@@ -27,23 +27,31 @@ struct CarriersListView: View {
     }
     
     var body: some View {
-        ErrorOverlayHost(
-            showServerError: vm.serverError
-        ) {
-            ZStack(alignment: .bottom) {
+        ZStack(alignment: .bottom) {
+            
+            VStack(alignment: .leading, spacing: 0) {
+                Text(summary.title)
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundStyle(.ypBlack)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 16)
+                    .padding(.horizontal, 16)
                 
-                VStack(alignment: .leading, spacing: 0) {
-                    Text(summary.title)
+                if vm.hasAvailability == nil {
+                    Spacer()
+                    Color.clear.frame(height: 56 + 12 + 8)
+                } else if vm.hasAvailability == false {
+                    Spacer()
+                    Text(LocalizedStringKey("carrier.no.options"))
                         .font(.system(size: 24, weight: .bold))
                         .foregroundStyle(.ypBlack)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.top, 16)
-                        .padding(.horizontal, 16)
-                    
-                    if vm.hasAvailability == nil {
-                        Spacer()
-                        Color.clear.frame(height: 56 + 12 + 8)
-                    } else if vm.hasAvailability == false {
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                        .padding(.horizontal, 24)
+                    Spacer()
+                    Color.clear.frame(height: 56 + 12 + 8)
+                } else {
+                    if filteredOptions.isEmpty {
                         Spacer()
                         Text(LocalizedStringKey("carrier.no.options"))
                             .font(.system(size: 24, weight: .bold))
@@ -54,68 +62,56 @@ struct CarriersListView: View {
                         Spacer()
                         Color.clear.frame(height: 56 + 12 + 8)
                     } else {
-                        if filteredOptions.isEmpty {
-                            Spacer()
-                            Text(LocalizedStringKey("carrier.no.options"))
-                                .font(.system(size: 24, weight: .bold))
-                                .foregroundStyle(.ypBlack)
-                                .multilineTextAlignment(.center)
-                                .frame(maxWidth: .infinity)
-                                .padding(.horizontal, 24)
-                            Spacer()
-                            Color.clear.frame(height: 56 + 12 + 8)
-                        } else {
-                            List {
-                                ForEach(filteredOptions) { item in
-                                    Button {
-                                        router.path.append(.carrierInfo(carrier(from: item)))
-                                    } label: {
-                                        CarrierRow(option: item)
-                                            .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-                                    }
-                                    .buttonStyle(.plain)
-                                    .listRowSeparator(.hidden)
-                                    .listRowInsets(.init(top: 0, leading: 16, bottom: 8, trailing: 16))
+                        List {
+                            ForEach(filteredOptions) { item in
+                                Button {
+                                    router.path.append(.carrierInfo(carrier(from: item)))
+                                } label: {
+                                    CarrierRow(option: item)
+                                        .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                                 }
+                                .buttonStyle(.plain)
+                                .listRowSeparator(.hidden)
+                                .listRowInsets(.init(top: 0, leading: 16, bottom: 8, trailing: 16))
                             }
-                            .listStyle(.plain)
-                            .listRowSeparator(.hidden)
-                            .listRowSpacing(0)
-                            .listSectionSpacing(.custom(0))
-                            .padding(.top, 16)
-                            .safeAreaInset(edge: .bottom) {
-                                Color.clear.frame(height: 56 + 12 + 8)
-                            }
+                        }
+                        .listStyle(.plain)
+                        .listRowSeparator(.hidden)
+                        .listRowSpacing(0)
+                        .listSectionSpacing(.custom(0))
+                        .padding(.top, 16)
+                        .safeAreaInset(edge: .bottom) {
+                            Color.clear.frame(height: 56 + 12 + 8)
                         }
                     }
                 }
-                
-                Button {
-                    router.path.append(.filters)
-                } label: {
-                    HStack(spacing: 8) {
-                        Text(LocalizedStringKey("carrier.list.button"))
-                            .font(.system(size: 17, weight: .bold))
-                        
-                        if hasActiveFilters {
-                            Circle()
-                                .fill(Color.ypRedUniversal)
-                                .frame(width: 10, height: 10)
-                                .transition(.scale.combined(with: .opacity))
-                        }
-                    }
-                    .frame(maxWidth: .infinity, minHeight: 60)
-                    .foregroundStyle(.ypWhiteUniversal)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .fill(Color.ypBlueUniversal)
-                    )
-                }
-                .buttonStyle(.plain)
-                .padding(.horizontal, 16)
-                .padding(.bottom, 12)
-                .animation(.snappy, value: hasActiveFilters)
             }
+            
+            Button {
+                router.path.append(.filters)
+            } label: {
+                HStack(spacing: 8) {
+                    Text(LocalizedStringKey("carrier.list.button"))
+                        .font(.system(size: 17, weight: .bold))
+                    
+                    if hasActiveFilters {
+                        Circle()
+                            .fill(Color.ypRedUniversal)
+                            .frame(width: 10, height: 10)
+                            .transition(.scale.combined(with: .opacity))
+                    }
+                }
+                .frame(maxWidth: .infinity, minHeight: 60)
+                .foregroundStyle(.ypWhiteUniversal)
+                .background(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(Color.ypBlueUniversal)
+                )
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 16)
+            .padding(.bottom, 12)
+            .animation(.snappy, value: hasActiveFilters)
         }
         
         .navigationBarTitleDisplayMode(.inline)
