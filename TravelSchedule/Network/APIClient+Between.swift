@@ -50,27 +50,32 @@ extension APIClient {
                 case .ok(let ok):
                     switch ok.body {
                     case .json(let model):
-                        let segments = Self.mapSegmentsResponse(model)
-                        return segments
+                        let segs = model.segments ?? []
+                        let intervals = model.interval_segments ?? []
+                        if segs.isEmpty && intervals.isEmpty {
+                            return []
+                        }
+                        return Self.mapSegmentsResponse(model)
                     default:
-                        break
+                        throw ServerHTTPError(statusCode: 200)
                     }
+                    
                 default:
-                    break
+                    throw ServerHTTPError(statusCode: 0)
                 }
+                
             } catch {
+                let fallbackSegments = try await Self.fetchBetweenFallback(
+                    session: self.session,
+                    apikey: self.apikey,
+                    baseURLString: Constants.apiURL,
+                    from: from,
+                    to: to,
+                    date: DateFormatterManager.dateYMD.string(from: date),
+                    transportTypes: transport
+                )
+                return fallbackSegments
             }
-            
-            let fallbackSegments = try await Self.fetchBetweenFallback(
-                session: self.session,
-                apikey: self.apikey,
-                baseURLString: Constants.apiURL,
-                from: from,
-                to: to,
-                date: DateFormatterManager.dateYMD.string(from: date),
-                transportTypes: transport
-            )
-            return fallbackSegments
         }
     }
     
@@ -148,45 +153,21 @@ extension APIClient {
         comps.queryItems = items
         
         guard let url = comps.url else { throw URLError(.badURL) }
-        let (data, response) = try await session.data(from: url)
         
-        guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
-            throw URLError(.badServerResponse)
-        }
+        let (data, response) = try await session.data(from: url)
+        try await Task { @MainActor in
+            try await APIClient(apikey: apikey, serverURL: URL(string: baseURLString)!).ensureHTTP200(response)
+        }.value
         
         let decoder = JSONDecoder()
         let model = try decoder.decode(Components.Schemas.SegmentsResponse.self, from: data)
-        return mapSegmentsResponse(model)
-    }
-    
-    private static func makeDebugSearchURL(
-        baseURLString: String,
-        apikey: String,
-        from: String,
-        to: String,
-        date: String,
-        transportTypes: String?,
-        transfers: Bool
-    ) -> String? {
-        guard var comps = URLComponents(string: baseURLString) else { return nil }
-        var path = comps.path
-        if !path.hasSuffix("/") { path.append("/") }
-        path.append("search/")
-        comps.path = path
         
-        var items: [URLQueryItem] = [
-            .init(name: "apikey", value: apikey),
-            .init(name: "from", value: from),
-            .init(name: "to", value: to),
-            .init(name: "date", value: date),
-            .init(name: "format", value: "json"),
-            .init(name: "lang", value: "ru_RU"),
-            .init(name: "transfers", value: transfers ? "true" : "false")
-        ]
-        if let t = transportTypes, !t.isEmpty {
-            items.append(.init(name: "transport_types", value: t))
+        let segs = model.segments ?? []
+        let intervals = model.interval_segments ?? []
+        if segs.isEmpty && intervals.isEmpty {
+            return []
         }
-        comps.queryItems = items
-        return comps.url?.absoluteString
+        
+        return mapSegmentsResponse(model)
     }
 }

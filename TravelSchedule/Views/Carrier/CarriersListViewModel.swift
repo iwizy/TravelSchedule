@@ -11,6 +11,8 @@ final class CarriersListViewModel: ObservableObject {
     @Published var isChecking: Bool = false
     @Published var hasAvailability: Bool? = nil
     
+    @Published var serverError: Bool = false
+    
     private var cityToStationsCache: [String: [APIClient.StationLite]] = [:]
     private var segments: [APIClient.BetweenSegment] = []
     
@@ -22,6 +24,7 @@ final class CarriersListViewModel: ObservableObject {
         print("➡️ [CarriersVM] real check start summary=\(summary)")
         isChecking = true
         hasAvailability = nil
+        serverError = false
         defer { isChecking = false }
         
         let fromCity = summary.fromCity.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -50,6 +53,7 @@ final class CarriersListViewModel: ObservableObject {
                 print("⚠️ [CarriersVM] codes not resolved: from=\(String(describing: fCode)) to=\(String(describing: tCode))")
                 return
             }
+            
             let today = Date()
             let segs = try await apiClient.getSegmentsBetween(
                 from: fromCode,
@@ -106,9 +110,16 @@ final class CarriersListViewModel: ObservableObject {
             self.segments = []
             self.options = []
             self.hasAvailability = false
-            print("❌ [CarriersVM] real check error: \(error)")
+            
+            if let serverErr = error as? APIClient.ServerHTTPError {
+                self.serverError = true
+                print("❌ [CarriersVM] server error: HTTP \(serverErr.statusCode)")
+            } else {
+                print("❌ [CarriersVM] real check error: \(error)")
+            }
         }
     }
+    
     
     
     private func resolveStationCode(apiClient: APIClient, cityTitle: String, stationTitle: String) async throws -> String? {
@@ -213,7 +224,6 @@ final class CarriersListViewModel: ObservableObject {
     private static func transferNote(from seg: APIClient.BetweenSegment) -> String? {
         seg.hasTransfer ? "С пересадкой" : nil
     }
-    
 }
 
 private extension Array where Element: Hashable {

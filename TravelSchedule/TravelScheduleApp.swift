@@ -8,7 +8,9 @@ import SwiftUI
 @main
 struct TravelScheduleApp: App {
     @StateObject private var themeManager = ThemeManager()
-    @StateObject private var network = NetworkMonitor.shared
+    @StateObject private var errorCenter  = ErrorCenter.shared
+    // ✅ NEW: прокидываем монитор сети для ErrorOverlayHost
+    @StateObject private var network      = NetworkMonitor.shared
     
     private let apiClient = APIClient(
         apikey: Constants.apiKey,
@@ -41,18 +43,19 @@ struct TravelScheduleApp: App {
         UINavigationBar.appearance().setBackgroundImage(UIImage(), for: .default)
         UINavigationBar.appearance().shadowImage = UIImage()
     }
+    
     var body: some Scene {
         WindowGroup {
             RootTabsView()
                 .environment(\.apiClient, apiClient)
                 .environmentObject(themeManager)
+                .environmentObject(errorCenter)
+                .environmentObject(network)              // ✅ NEW: вот его и не хватало
                 .onAppear {
                     let isDark = UITraitCollection.current.userInterfaceStyle == .dark
                     themeManager.bindToSystem(isDark ? .dark : .light)
                 }
                 .preferredColorScheme(themeManager.effectiveScheme)
         }
-        .environmentObject(network)
     }
 }
-

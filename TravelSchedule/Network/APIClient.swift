@@ -16,6 +16,14 @@ actor APIClient {
     
     private var stationsListCache: Components.Schemas.AllStationsResponse?
     
+    static var forceServerErrorEnabled: Bool {
+#if DEBUG
+        return ProcessInfo.processInfo.environment["FORCE_SERVER_ERROR"] == "1"
+#else
+        return false
+#endif
+    }
+    
     init(
         apikey: String,
         serverURL: URL,
@@ -37,6 +45,10 @@ actor APIClient {
         params: [String: Any] = [:],
         _ work: @Sendable () async throws -> T
     ) async throws -> T {
+        if Self.forceServerErrorEnabled {
+            throw ServerHTTPError(statusCode: 500)
+        }
+        
         let t0 = Date()
         do {
             let value = try await work()
@@ -57,5 +69,20 @@ actor APIClient {
     
     func invalidateStationsListCache() {
         stationsListCache = nil
+    }
+}
+
+extension APIClient {
+    struct ServerHTTPError: Error {
+        let statusCode: Int
+    }
+    
+    func ensureHTTP200(_ response: URLResponse) throws {
+        guard let http = response as? HTTPURLResponse else {
+            throw URLError(.badServerResponse)
+        }
+        guard http.statusCode == 200 else {
+            throw ServerHTTPError(statusCode: http.statusCode)
+        }
     }
 }

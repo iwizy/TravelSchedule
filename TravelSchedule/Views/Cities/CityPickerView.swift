@@ -11,6 +11,7 @@ struct CityPickerView: View {
     @EnvironmentObject var router: MainRouter
     @Environment(\.dismiss) private var dismiss
     @Environment(\.apiClient) private var apiClient
+    @EnvironmentObject private var errors: ErrorCenter
     @StateObject private var viewModel = CityPickerViewModel()
     
     @State private var query: String = ""
@@ -63,7 +64,7 @@ struct CityPickerView: View {
                             .foregroundStyle(.ypBlack)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 24)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
                             .allowsHitTesting(false)
                     }
                 }
@@ -87,14 +88,15 @@ struct CityPickerView: View {
             
             if viewModel.isLoading {
                 LoaderView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(Color.black.opacity(0.001))
                     .transition(.opacity)
             }
         }
         .task {
-            print("➡️ [CityPicker] task load start")
-            await viewModel.load(apiClient: apiClient)
+            let force = errors.serverError
+            print("➡️ [CityPicker] task load start (force=\(force))")
+            await viewModel.load(apiClient: apiClient, force: force)
             if !query.isEmpty {
                 viewModel.setInitialQuery(query)
             } else {

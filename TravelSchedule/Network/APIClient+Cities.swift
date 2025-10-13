@@ -6,8 +6,8 @@
 import Foundation
 
 extension APIClient {
-    func getRussianCities() async throws -> [City] {
-        let catalog = try await getStationsListCached()
+    func getRussianCities(force: Bool = false) async throws -> [City] {
+        let catalog = try await getStationsListCached(force: force)
         
         let countries = catalog.countries ?? []
         let ruCountry =
@@ -15,22 +15,22 @@ extension APIClient {
         countries.first(where: { ($0.title ?? "").localizedCaseInsensitiveContains("росси") })
         
         guard let country = ruCountry else { return [] }
-        let countryTitle = (country.title ?? "").trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+        let countryTitle = (country.title ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         
         var seen = Set<String>()
         var result: [City] = []
         
         for region in (country.regions ?? []) {
-            let regionTitle = (region.title ?? "").trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+            let regionTitle = (region.title ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
             
             for s in (region.settlements ?? []) {
                 guard
-                    let rawTitle = s.title?.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines),
+                    let rawTitle = s.title?.trimmingCharacters(in: .whitespacesAndNewlines),
                     !rawTitle.isEmpty
                 else { continue }
                 
                 let rawCode = (s.codes?.yandex_code ?? s.codes?.yandex)?
-                    .trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
                 
                 guard let rawCode, !rawCode.isEmpty else { continue }
                 
