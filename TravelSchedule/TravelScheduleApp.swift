@@ -8,6 +8,7 @@ import SwiftUI
 @main
 struct TravelScheduleApp: App {
     @StateObject private var themeManager = ThemeManager()
+    @StateObject private var network = NetworkMonitor.shared
     
     private let apiClient = APIClient(
         apikey: Constants.apiKey,
@@ -51,6 +52,7 @@ struct TravelScheduleApp: App {
                 }
                 .preferredColorScheme(themeManager.effectiveScheme)
         }
+        .environmentObject(network)
     }
 }
 

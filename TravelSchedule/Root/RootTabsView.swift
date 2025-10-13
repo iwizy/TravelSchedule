@@ -17,24 +17,26 @@ struct RootTabsView: View {
     
     var body: some View {
         TabView(selection: $selectedTab) {
-            NavigationStack(path: $mainRouter.path) {
-                MainView()
-                    .navigationBarTitleDisplayMode(.inline)
+            ErrorOverlayHost {
+                NavigationStack(path: $mainRouter.path) {
+                    MainView()
+                        .navigationBarTitleDisplayMode(.inline)
+                }
+                .environmentObject(mainRouter)
             }
-            .environmentObject(mainRouter)
             .tabItem { Image("TabIconMain") }
             .tag(AppTab.main)
-            
             .overlay(alignment: .top) {
                 Color(.systemBackground)
                     .frame(height: 2)
                     .ignoresSafeArea(edges: .top)
             }
-            
-            NavigationStack(path: $settingsPath) {
-                SettingsView()
-                    .navigationTitle(LocalizedStringKey("settings.title"))
-                    .navigationBarTitleDisplayMode(.inline)
+            ErrorOverlayHost {
+                NavigationStack(path: $settingsPath) {
+                    SettingsView()
+                        .navigationTitle(LocalizedStringKey("settings.title"))
+                        .navigationBarTitleDisplayMode(.inline)
+                }
             }
             .tabItem { Image("TabIconSettings") }
             .tag(AppTab.settings)
