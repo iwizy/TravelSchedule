@@ -5,12 +5,12 @@
 
 import Foundation
 
-enum RouteField: Hashable {
+enum RouteField: Hashable, Sendable {
     case from
     case to
 }
 
-struct RouteSummary: Hashable {
+struct RouteSummary: Hashable, Sendable {
     let fromCity: String
     let fromStation: String
     let toCity: String
@@ -21,7 +21,7 @@ struct RouteSummary: Hashable {
     }
 }
 
-enum MainRoute: Hashable {
+enum MainRoute: Hashable, Sendable {
     case city(RouteField)
     case station(City, RouteField)
     case carriers(RouteSummary)

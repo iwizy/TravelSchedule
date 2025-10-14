@@ -10,65 +10,21 @@ struct FiltersView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var selection = FiltersSelection()
     let onApply: (FiltersSelection) -> Void
-
+    
     var body: some View {
         ZStack(alignment: .bottom) {
             List {
-                Section {
-                    timeRow(.morning)
-                        .frame(height: 60)
-                        .listRowSeparator(.hidden)
-                        .listRowInsets(.init(top: 0, leading: 16, bottom: 0, trailing: 16))
-
-                    timeRow(.day)
-                        .frame(height: 60)
-                        .listRowSeparator(.hidden)
-                        .listRowInsets(.init(top: 0, leading: 16, bottom: 0, trailing: 16))
-
-                    timeRow(.evening)
-                        .frame(height: 60)
-                        .listRowSeparator(.hidden)
-                        .listRowInsets(.init(top: 0, leading: 16, bottom: 0, trailing: 16))
-
-                    timeRow(.night)
-                        .frame(height: 60)
-                        .listRowSeparator(.hidden)
-                        .listRowInsets(.init(top: 0, leading: 16, bottom: 16, trailing: 16))
-                } header: {
-                    Text(LocalizedStringKey("filters.depart"))
-                        .font(.system(size: 24, weight: .bold))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.vertical, 0)
-                        .textCase(nil)
-                        .foregroundStyle(Color.ypBlack)
-                }
-                .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 16, trailing: 16))
-
-                Section {
-                    radioRow(title: String(localized: "filters.transfer.yes"),   isSelected: selection.transfers == true)  { selection.transfers = true  }
-                        .listRowSeparator(.hidden)
-                        .frame(height: 60)
-                        .listRowInsets(.init(top: 0, leading: 16, bottom: 0, trailing: 16))
-
-                    radioRow(title: String(localized: "filters.transfer.no"),  isSelected: selection.transfers == false) { selection.transfers = false }
-                        .listRowSeparator(.hidden)
-                        .frame(height: 60)
-                        .listRowInsets(.init(top: 0, leading: 16, bottom: 0, trailing: 16))
-
-                } header: {
-                    Text(LocalizedStringKey("filters.transfer.title"))
-                        .font(.system(size: 24, weight: .bold))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.vertical, 0)
-                        .textCase(nil)
-                        .foregroundStyle(Color.ypBlack)
-                }
-                .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 16, trailing: 16))
+                departureSection
+                transfersSection
             }
             .listStyle(.plain)
             .listRowSpacing(0)
             .listSectionSpacing(.custom(0))
-
+            .scrollContentBackground(.hidden)
+            .listRowBackground(Color.clear)
+            .background(Color(.ypWhite))
+            
+            
             if selection.canApply {
                 Button {
                     onApply(selection)
@@ -93,9 +49,7 @@ struct FiltersView: View {
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
-                Button {
-                    dismiss()
-                } label: {
+                Button { dismiss() } label: {
                     Image(systemName: "chevron.left")
                         .imageScale(.large)
                         .font(.system(size: 17, weight: .semibold))
@@ -109,7 +63,78 @@ struct FiltersView: View {
             selection = filters.appliedFilters ?? FiltersSelection()
         }
     }
-
+    
+    // MARK: - Sections (вынесено для ускорения тайпчека)
+    
+    private var departureSection: some View {
+        Section {
+            timeRow(.morning)
+                .frame(height: 60)
+                .listRowSeparator(.hidden)
+                .listRowInsets(.init(top: 0, leading: 16, bottom: 0, trailing: 16))
+                .listRowBackground(Color(.ypWhite))
+            
+            timeRow(.day)
+                .frame(height: 60)
+                .listRowSeparator(.hidden)
+                .listRowInsets(.init(top: 0, leading: 16, bottom: 0, trailing: 16))
+                .listRowBackground(Color(.ypWhite))
+            
+            timeRow(.evening)
+                .frame(height: 60)
+                .listRowSeparator(.hidden)
+                .listRowInsets(.init(top: 0, leading: 16, bottom: 0, trailing: 16))
+                .listRowBackground(Color(.ypWhite))
+            
+            timeRow(.night)
+                .frame(height: 60)
+                .listRowSeparator(.hidden)
+                .listRowInsets(.init(top: 0, leading: 16, bottom: 16, trailing: 16))
+                .listRowBackground(Color(.ypWhite))
+        } header: {
+            Text(LocalizedStringKey("filters.depart"))
+                .font(.system(size: 24, weight: .bold))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, 0)
+                .textCase(nil)
+                .foregroundStyle(Color.ypBlack)
+        }
+        .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 16, trailing: 16))
+    }
+    
+    private var transfersSection: some View {
+        Section {
+            radioRow(
+                title: String(localized: "filters.transfer.yes"),
+                isSelected: selection.transfers == true
+            ) { selection.transfers = true }
+                .listRowSeparator(.hidden)
+                .frame(height: 60)
+                .listRowInsets(.init(top: 0, leading: 16, bottom: 0, trailing: 16))
+                .listRowBackground(Color(.ypWhite))
+            
+            radioRow(
+                title: String(localized: "filters.transfer.no"),
+                isSelected: selection.transfers == false
+            ) { selection.transfers = false }
+                .listRowSeparator(.hidden)
+                .frame(height: 60)
+                .listRowInsets(.init(top: 0, leading: 16, bottom: 0, trailing: 16))
+                .listRowBackground(Color(.ypWhite))
+            
+        } header: {
+            Text(LocalizedStringKey("filters.transfer.title"))
+                .font(.system(size: 24, weight: .bold))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, 0)
+                .textCase(nil)
+                .foregroundStyle(Color.ypBlack)
+        }
+        .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 16, trailing: 16))
+    }
+    
+    // MARK: - Rows
+    
     private func timeRow(_ band: FiltersSelection.TimeBand) -> some View {
         let isOn = selection.timeBands.contains(band)
         return HStack {
@@ -125,7 +150,7 @@ struct FiltersView: View {
             else    { selection.timeBands.insert(band) }
         }
     }
-
+    
     private func radioRow(title: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
         HStack {
             Text(title)
@@ -174,25 +199,5 @@ private struct Radio: View {
             }
         }
         .animation(.snappy, value: isOn)
-    }
-}
-
-#Preview("Фильтры — пусто") {
-    NavigationStack {
-        FiltersView(onApply: { value in
-            print("APPLY:", value)
-        })
-        .environmentObject(CarriersFilterModel())
-    }
-}
-
-#Preview("Фильтры — уже применены") {
-    let model = CarriersFilterModel()
-    model.appliedFilters = FiltersSelection(timeBands: [.morning, .evening], transfers: false)
-    return NavigationStack {
-        FiltersView(onApply: { value in
-            print("APPLY:", value)
-        })
-        .environmentObject(model)
     }
 }

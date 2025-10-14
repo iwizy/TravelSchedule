@@ -41,7 +41,7 @@ struct CarrierInfoView: View {
         .background(Color.ypWhite)
         .ignoresSafeArea(edges: .bottom)
         .navigationBarBackButtonHidden(true)
-        .navigationTitle(viewModel.title)
+        .navigationTitle("Информация о перевозчике")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {

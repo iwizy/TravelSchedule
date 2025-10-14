@@ -5,7 +5,7 @@
 
 import Foundation
 
-struct Carrier: Identifiable, Hashable, Codable {
+struct Carrier: Identifiable, Hashable, Codable, Sendable {
     let id: String
     let name: String
     let logoAsset: String

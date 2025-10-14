@@ -32,7 +32,7 @@ struct CityPickerView: View {
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
                     .padding(.bottom, 4)
-                    .background(Color(.systemBackground))
+                    .background(Color(.ypWhite))
                 
                 ZStack {
                     ScrollView {
@@ -72,6 +72,9 @@ struct CityPickerView: View {
             .navigationTitle(LocalizedStringKey("city.picker.title"))
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarBackButtonHidden(true)
+            .toolbarBackground(Color(.ypWhite), for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button { dismiss() } label: {
@@ -83,7 +86,7 @@ struct CityPickerView: View {
                 }
             }
             .toolbar(.hidden, for: .tabBar)
-            .background(Color(.systemBackground))
+            .background(Color(.ypWhite))
             .disabled(viewModel.isLoading)
             
             if viewModel.isLoading {

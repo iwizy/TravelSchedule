@@ -62,27 +62,7 @@ struct CarriersListView: View {
                         Spacer()
                         Color.clear.frame(height: 56 + 12 + 8)
                     } else {
-                        List {
-                            ForEach(filteredOptions) { item in
-                                Button {
-                                    router.path.append(.carrierInfo(carrier(from: item)))
-                                } label: {
-                                    CarrierRow(option: item)
-                                        .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-                                }
-                                .buttonStyle(.plain)
-                                .listRowSeparator(.hidden)
-                                .listRowInsets(.init(top: 0, leading: 16, bottom: 8, trailing: 16))
-                            }
-                        }
-                        .listStyle(.plain)
-                        .listRowSeparator(.hidden)
-                        .listRowSpacing(0)
-                        .listSectionSpacing(.custom(0))
-                        .padding(.top, 16)
-                        .safeAreaInset(edge: .bottom) {
-                            Color.clear.frame(height: 56 + 12 + 8)
-                        }
+                        carriersList // ← вынесено отдельно, чтобы упростить type-check
                     }
                 }
             }
@@ -129,6 +109,8 @@ struct CarriersListView: View {
                 }
             }
         }
+        .toolbarBackground(Color(.ypWhite), for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
         .tint(.ypBlack)
         .toolbar(.hidden, for: .tabBar)
         .task {
@@ -139,13 +121,43 @@ struct CarriersListView: View {
         .overlay {
             if vm.isChecking {
                 ZStack {
-                    Color.black.opacity(0.05).ignoresSafeArea()
+                    Color.ypWhite.ignoresSafeArea()
                     LoaderView()
                 }
                 .transition(.opacity)
             }
         }
         .disabled(vm.isChecking)
+        .background(Color(.ypWhite).ignoresSafeArea())
+    }
+    
+    // MARK: - Extracted views (упростили type-checker)
+    private var carriersList: some View {
+        List {
+            ForEach(filteredOptions, id: \.id) { (item: CarrierOption) in
+                Button {
+                    router.path.append(.carrierInfo(carrier(from: item)))
+                } label: {
+                    CarrierRow(option: item)
+                        .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                .listRowSeparator(.hidden)
+                .listRowInsets(.init(top: 0, leading: 16, bottom: 8, trailing: 16))
+                .listRowBackground(Color.clear)
+            }
+        }
+        .listStyle(.plain)
+        .listRowSeparator(.hidden)
+        .listRowSpacing(0)
+        .listSectionSpacing(.custom(0))
+        .scrollContentBackground(.hidden)
+        .listRowBackground(Color.clear)
+        .background(Color(.ypWhite))
+        .padding(.top, 16)
+        .safeAreaInset(edge: .bottom) {
+            Color.clear.frame(height: 56 + 12 + 8)
+        }
     }
     
     private func applyFilters(_ options: [CarrierOption], _ selection: FiltersSelection?) -> [CarrierOption] {
@@ -196,6 +208,8 @@ struct CarriersListView: View {
         )
     }
 }
+
+// MARK: - Row
 
 private struct CarrierRow: View {
     let option: CarrierOption

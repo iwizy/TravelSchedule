@@ -27,9 +27,6 @@ final class CarrierInfoViewModel: ObservableObject {
     
     init(carrier: Carrier) {
         self.carrier = carrier
-        if !carrier.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            self.title = carrier.name
-        }
     }
 }
 

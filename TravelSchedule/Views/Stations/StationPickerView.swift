@@ -32,7 +32,7 @@ struct StationPickerView: View {
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
                     .padding(.bottom, 4)
-                    .background(Color(.systemBackground))
+                    .background(Color(.ypWhite))
                 
                 ZStack {
                     ScrollView {
@@ -83,7 +83,7 @@ struct StationPickerView: View {
                 }
             }
             .toolbar(.hidden, for: .tabBar)
-            .background(Color(.systemBackground))
+            .background(Color(.ypWhite))
             .disabled(viewModel.isLoading)
             
             if viewModel.isLoading {

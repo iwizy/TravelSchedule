@@ -5,14 +5,14 @@
 
 import Foundation
 
-public enum MDInline: Equatable {
+public enum MDInline: Equatable, Sendable {
     case text(String)
     case bold(String)
     case italic(String)
     case link(text: String, url: String)
 }
 
-public enum MDBlock: Equatable {
+public enum MDBlock: Equatable, Sendable {
     case h1([MDInline])
     case h2([MDInline])
     case h3([MDInline])

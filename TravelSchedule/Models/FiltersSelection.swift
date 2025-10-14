@@ -5,8 +5,8 @@
 
 import SwiftUI
 
-public struct FiltersSelection: Hashable {
-    public enum TimeBand: CaseIterable, Hashable {
+public struct FiltersSelection: Hashable, Sendable {
+    public enum TimeBand: CaseIterable, Hashable, Sendable {
         case morning, day, evening, night
         public var title: String {
             switch self {

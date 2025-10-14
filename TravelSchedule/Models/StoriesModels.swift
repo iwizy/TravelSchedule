@@ -5,7 +5,7 @@
 
 import Foundation
 
-struct StoryMedia: Identifiable, Hashable {
+struct StoryMedia: Identifiable, Hashable, Sendable {
     let id: UUID
     let imageName: String
     let title: String?
@@ -25,7 +25,7 @@ struct StoryMedia: Identifiable, Hashable {
     }
 }
 
-struct StoryGroup: Identifiable, Hashable {
+struct StoryGroup: Identifiable, Hashable, Sendable {
     let id: UUID
     let title: String
     let avatar: String

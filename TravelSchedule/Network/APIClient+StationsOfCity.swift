@@ -6,7 +6,7 @@
 import Foundation
 
 extension APIClient {
-    struct StationLite: Hashable, Codable {
+    struct StationLite: Hashable, Codable, Sendable {
         let id: String
         let title: String
         let transportType: String?

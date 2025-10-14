@@ -8,7 +8,7 @@ import OpenAPIRuntime
 import OpenAPIURLSession
 
 extension APIClient {
-    struct BetweenSegment: Hashable, Codable {
+    struct BetweenSegment: Hashable, Codable, Sendable {
         let carrierName: String
         let carrierLogoURL: URL?
         let carrierCode: String?

@@ -73,7 +73,7 @@ actor APIClient {
 }
 
 extension APIClient {
-    struct ServerHTTPError: Error {
+    struct ServerHTTPError: Error, Sendable {
         let statusCode: Int
     }
     

@@ -5,7 +5,7 @@
 
 import Foundation
 
-struct CarrierOption: Identifiable, Hashable {
+struct CarrierOption: Identifiable, Hashable, Sendable {
     let id = UUID()
     let carrierName: String
     let logoName: String
