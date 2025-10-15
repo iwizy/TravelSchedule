@@ -7,6 +7,7 @@ import Foundation
 import OpenAPIRuntime
 import OpenAPIURLSession
 
+// MARK: - Models
 extension APIClient {
     struct BetweenSegment: Hashable, Codable, Sendable {
         let carrierName: String
@@ -20,6 +21,7 @@ extension APIClient {
         let carrierPhoneE164: String?
     }
     
+    // MARK: - Public API
     func getSegmentsBetween(
         from: String,
         to: String,
@@ -79,6 +81,7 @@ extension APIClient {
         }
     }
     
+    // MARK: - Mapping
     private static func mapSegmentsResponse(
         _ resp: Components.Schemas.SegmentsResponse
     ) -> [BetweenSegment] {
@@ -121,6 +124,7 @@ extension APIClient {
         }
     }
     
+    // MARK: - Fallback networking
     private static func fetchBetweenFallback(
         session: URLSession,
         apikey: String,

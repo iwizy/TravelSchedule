@@ -5,10 +5,12 @@
 
 import SwiftUI
 
+// MARK: - UserAgreementView
 struct UserAgreementView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var blocks: [MDBlock] = []
     
+    // MARK: Body
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -35,6 +37,7 @@ struct UserAgreementView: View {
         .ignoresSafeArea(edges: .bottom)
     }
     
+    // MARK: Data Loading
     private func loadMarkdown() {
         guard let url = Bundle.main.url(forResource: "UserAgreement", withExtension: "md"),
               let md = try? String(contentsOf: url, encoding: .utf8)
@@ -45,9 +48,11 @@ struct UserAgreementView: View {
     }
 }
 
+// MARK: - AgreementMarkdownBlockView
 private struct AgreementMarkdownBlockView: View {
     let block: MDBlock
     
+    // MARK: Body
     var body: some View {
         switch block {
         case .h1(let inlines):

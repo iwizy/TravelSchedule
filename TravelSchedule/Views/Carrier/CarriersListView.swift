@@ -6,52 +6,46 @@
 import SwiftUI
 
 struct CarriersListView: View {
-    
+    // MARK: - Route summary
     let summary: RouteSummary
     
+    // MARK: Env & VM
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var router: MainRouter
     @EnvironmentObject var filters: CarriersFilterModel
+    @EnvironmentObject var errorCenter: ErrorCenter
     @StateObject private var vm = CarriersListViewModel()
     @Environment(\.apiClient) private var apiClient
     
+    // MARK: - State
     @State private var didLoadOnce = false
     
+    // MARK: - Derived
     private var filteredOptions: [CarrierOption] {
         applyFilters(vm.options, filters.appliedFilters)
     }
-    
     private var hasActiveFilters: Bool {
         if let f = filters.appliedFilters { return f.canApply }
         return false
     }
     
     var body: some View {
-        ZStack(alignment: .bottom) {
-            
-            VStack(alignment: .leading, spacing: 0) {
-                Text(summary.title)
-                    .font(.system(size: 24, weight: .bold))
-                    .foregroundStyle(.ypBlack)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.top, 16)
-                    .padding(.horizontal, 16)
+        // MARK: - Error overlay host (server/offline)
+        ErrorOverlayHost(showServerError: errorCenter.serverError) {
+            ZStack(alignment: .bottom) {
                 
-                if vm.hasAvailability == nil {
-                    Spacer()
-                    Color.clear.frame(height: 56 + 12 + 8)
-                } else if vm.hasAvailability == false {
-                    Spacer()
-                    Text(LocalizedStringKey("carrier.no.options"))
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(summary.title)
                         .font(.system(size: 24, weight: .bold))
                         .foregroundStyle(.ypBlack)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity)
-                        .padding(.horizontal, 24)
-                    Spacer()
-                    Color.clear.frame(height: 56 + 12 + 8)
-                } else {
-                    if filteredOptions.isEmpty {
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.top, 16)
+                        .padding(.horizontal, 16)
+                    
+                    if vm.hasAvailability == nil {
+                        Spacer()
+                        Color.clear.frame(height: 56 + 12 + 8)
+                    } else if vm.hasAvailability == false {
                         Spacer()
                         Text(LocalizedStringKey("carrier.no.options"))
                             .font(.system(size: 24, weight: .bold))
@@ -62,73 +56,84 @@ struct CarriersListView: View {
                         Spacer()
                         Color.clear.frame(height: 56 + 12 + 8)
                     } else {
-                        carriersList // ← вынесено отдельно, чтобы упростить type-check
+                        if filteredOptions.isEmpty {
+                            Spacer()
+                            Text(LocalizedStringKey("carrier.no.options"))
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundStyle(.ypBlack)
+                                .multilineTextAlignment(.center)
+                                .frame(maxWidth: .infinity)
+                                .padding(.horizontal, 24)
+                            Spacer()
+                            Color.clear.frame(height: 56 + 12 + 8)
+                        } else {
+                            carriersList
+                        }
                     }
                 }
-            }
-            
-            Button {
-                router.path.append(.filters)
-            } label: {
-                HStack(spacing: 8) {
-                    Text(LocalizedStringKey("carrier.list.button"))
-                        .font(.system(size: 17, weight: .bold))
-                    
-                    if hasActiveFilters {
-                        Circle()
-                            .fill(Color.ypRedUniversal)
-                            .frame(width: 10, height: 10)
-                            .transition(.scale.combined(with: .opacity))
-                    }
-                }
-                .frame(maxWidth: .infinity, minHeight: 60)
-                .foregroundStyle(.ypWhiteUniversal)
-                .background(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color.ypBlueUniversal)
-                )
-            }
-            .buttonStyle(.plain)
-            .padding(.horizontal, 16)
-            .padding(.bottom, 12)
-            .animation(.snappy, value: hasActiveFilters)
-        }
-        
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
+                
                 Button {
-                    filters.appliedFilters = nil
-                    dismiss()
+                    router.path.append(.filters)
                 } label: {
-                    Image(systemName: "chevron.left")
-                        .imageScale(.large)
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundStyle(.ypBlack)
+                    HStack(spacing: 8) {
+                        Text(LocalizedStringKey("carrier.list.button"))
+                            .font(.system(size: 17, weight: .bold))
+                        
+                        if hasActiveFilters {
+                            Circle()
+                                .fill(Color.ypRedUniversal)
+                                .frame(width: 10, height: 10)
+                                .transition(.scale.combined(with: .opacity))
+                        }
+                    }
+                    .frame(maxWidth: .infinity, minHeight: 60)
+                    .foregroundStyle(.ypWhiteUniversal)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(Color.ypBlueUniversal)
+                    )
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal, 16)
+                .padding(.bottom, 12)
+                .animation(.snappy, value: hasActiveFilters)
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden(true)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button {
+                        filters.appliedFilters = nil
+                        dismiss()
+                    } label: {
+                        Image(systemName: "chevron.left")
+                            .imageScale(.large)
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(.ypBlack)
+                    }
                 }
             }
-        }
-        .toolbarBackground(Color(.ypWhite), for: .navigationBar)
-        .toolbarBackground(.visible, for: .navigationBar)
-        .tint(.ypBlack)
-        .toolbar(.hidden, for: .tabBar)
-        .task {
-            guard !didLoadOnce else { return }
-            didLoadOnce = true
-            await vm.checkAvailabilityReal(apiClient: apiClient, summary: summary)
-        }
-        .overlay {
-            if vm.isChecking {
-                ZStack {
-                    Color.ypWhite.ignoresSafeArea()
-                    LoaderView()
-                }
-                .transition(.opacity)
+            .toolbarBackground(Color(.ypWhite), for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .tint(.ypBlack)
+            .toolbar(.hidden, for: .tabBar)
+            .task {
+                guard !didLoadOnce else { return }
+                didLoadOnce = true
+                await vm.checkAvailabilityReal(apiClient: apiClient, summary: summary)
             }
+            .overlay {
+                if vm.isChecking {
+                    ZStack {
+                        Color.ypWhite.ignoresSafeArea()
+                        LoaderView()
+                    }
+                    .transition(.opacity)
+                }
+            }
+            .disabled(vm.isChecking)
+            .background(Color(.ypWhite).ignoresSafeArea())
         }
-        .disabled(vm.isChecking)
-        .background(Color(.ypWhite).ignoresSafeArea())
     }
     
     // MARK: - Extracted views (упростили type-checker)
@@ -160,6 +165,7 @@ struct CarriersListView: View {
         }
     }
     
+    // MARK: - Filtering helpers
     private func applyFilters(_ options: [CarrierOption], _ selection: FiltersSelection?) -> [CarrierOption] {
         guard let f = selection, f.canApply else { return options }
         let byTransfers: [CarrierOption] = {
@@ -288,7 +294,7 @@ private struct CarrierRow: View {
                             .resizable()
                             .scaledToFit()
                             .padding(6)
-                            .transition(.opacity.combined(with: .scale))
+                            .transition(.opacity .combined(with: .scale))
                     case .failure:
                         EmptyView()
                     @unknown default:
@@ -311,18 +317,5 @@ private struct DividerLine: View {
             .fill(Color(.ypGrayUniversal))
             .frame(height: 1)
             .padding(.horizontal, 6)
-    }
-}
-
-#Preview("CarriersListView — push filters") {
-    NavigationStack {
-        CarriersListView(
-            summary: RouteSummary(
-                fromCity: "Москва", fromStation: "Курский вокзал",
-                toCity: "Санкт-Петербург", toStation: "Балтийский вокзал"
-            )
-        )
-        .environmentObject(MainRouter())
-        .environmentObject(CarriersFilterModel())
     }
 }

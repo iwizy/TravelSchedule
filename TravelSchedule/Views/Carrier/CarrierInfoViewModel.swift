@@ -6,17 +6,23 @@
 import SwiftUI
 import Combine
 
+// MARK: - CarrierInfoViewModel
 @MainActor
 final class CarrierInfoViewModel: ObservableObject {
+    // MARK: - Published state
     @Published private(set) var carrier: Carrier
-    @Published var title: String = "Информация о перевозчике"
     
+    // MARK: UI
+    let title = String(localized: "carrier.info.title", defaultValue: "Информация о перевозчике")
+    
+    // MARK: - Computed email
     var emailValue: String { carrier.email?.trimmedNonEmpty ?? "—" }
     var emailURL: URL? {
         guard let e = carrier.email?.trimmedNonEmpty else { return nil }
         return URL(string: "mailto:\(e)")
     }
     
+    // MARK: - Computed phone
     var phoneDisplayValue: String { carrier.phoneDisplay?.trimmedNonEmpty ?? "—" }
     var phoneURL: URL? {
         guard let raw = carrier.phoneE164?.trimmedNonEmpty else { return nil }
@@ -25,14 +31,8 @@ final class CarrierInfoViewModel: ObservableObject {
         return URL(string: "tel://\(digits)")
     }
     
+    // MARK: - Init
     init(carrier: Carrier) {
         self.carrier = carrier
-    }
-}
-
-private extension String {
-    var trimmedNonEmpty: String? {
-        let s = trimmingCharacters(in: .whitespacesAndNewlines)
-        return s.isEmpty ? nil : s
     }
 }

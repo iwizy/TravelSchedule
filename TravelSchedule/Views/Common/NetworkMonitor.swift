@@ -5,11 +5,15 @@
 
 import Foundation
 import Network
-import Combine
+@preconcurrency import Combine
 
+// MARK: - NetworkMonitor
+@MainActor
 final class NetworkMonitor: ObservableObject {
+    // MARK: Singleton
     static let shared = NetworkMonitor()
     
+    // MARK: Private properties
     private let monitor = NWPathMonitor()
     private let queue = DispatchQueue(label: "NetworkMonitor.queue")
     
@@ -17,9 +21,13 @@ final class NetworkMonitor: ObservableObject {
     private let subject = CurrentValueSubject<Bool, Never>(true)
     private var bag = Set<AnyCancellable>()
     
+    // MARK: Init
     private init() {
         monitor.pathUpdateHandler = { [weak self] path in
-            self?.subject.send(path.status == .satisfied)
+            guard let self else { return }
+            Task { @MainActor in
+                self.subject.send(path.status == .satisfied)
+            }
         }
         monitor.start(queue: queue)
         

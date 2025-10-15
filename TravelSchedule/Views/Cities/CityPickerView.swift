@@ -6,16 +6,20 @@
 import SwiftUI
 
 struct CityPickerView: View {
+    // MARK: - Input
     let field: RouteField
     
+    // MARK: - Environment
     @EnvironmentObject var router: MainRouter
     @Environment(\.dismiss) private var dismiss
     @Environment(\.apiClient) private var apiClient
     @EnvironmentObject private var errors: ErrorCenter
-    @StateObject private var viewModel = CityPickerViewModel()
     
+    // MARK: - State
+    @StateObject private var viewModel = CityPickerViewModel()
     @State private var query: String = ""
     
+    // MARK: - Init
     init(field: RouteField, initialQuery: String? = nil) {
         self.field = field
         if let q = initialQuery {
@@ -23,8 +27,10 @@ struct CityPickerView: View {
         }
     }
     
+    // MARK: - Derived
     private var filteredCities: [City] { viewModel.filtered }
     
+    // MARK: - Body
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
@@ -74,7 +80,6 @@ struct CityPickerView: View {
             .navigationBarBackButtonHidden(true)
             .toolbarBackground(Color(.ypWhite), for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
-
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button { dismiss() } label: {
@@ -96,6 +101,7 @@ struct CityPickerView: View {
                     .transition(.opacity)
             }
         }
+        // MARK: - Tasks
         .task {
             let force = errors.serverError
             print("➡️ [CityPicker] task load start (force=\(force))")

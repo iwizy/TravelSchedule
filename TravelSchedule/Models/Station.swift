@@ -5,6 +5,7 @@
 
 import Foundation
 
+// MARK: - Station model
 struct Station: Identifiable, Sendable, Hashable, Codable {
     let id: String
     let title: String

@@ -5,6 +5,7 @@
 
 import SwiftUI
 
+// MARK: - FiltersView
 struct FiltersView: View {
     @EnvironmentObject var filters: CarriersFilterModel
     @Environment(\.dismiss) private var dismiss
@@ -23,7 +24,6 @@ struct FiltersView: View {
             .scrollContentBackground(.hidden)
             .listRowBackground(Color.clear)
             .background(Color(.ypWhite))
-            
             
             if selection.canApply {
                 Button {
@@ -64,8 +64,7 @@ struct FiltersView: View {
         }
     }
     
-    // MARK: - Sections (вынесено для ускорения тайпчека)
-    
+    // MARK: - Sections
     private var departureSection: some View {
         Section {
             timeRow(.morning)
@@ -134,7 +133,6 @@ struct FiltersView: View {
     }
     
     // MARK: - Rows
-    
     private func timeRow(_ band: FiltersSelection.TimeBand) -> some View {
         let isOn = selection.timeBands.contains(band)
         return HStack {
@@ -164,6 +162,7 @@ struct FiltersView: View {
     }
 }
 
+// MARK: - Components
 private struct CheckBox: View {
     let isOn: Bool
     var body: some View {

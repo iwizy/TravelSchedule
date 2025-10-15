@@ -5,6 +5,7 @@
 
 import Foundation
 
+// MARK: - City model
 struct City: Identifiable, Sendable, Hashable, Codable {
     let id: String
     let title: String

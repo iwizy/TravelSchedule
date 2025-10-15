@@ -5,6 +5,7 @@
 
 import Foundation
 
+// MARK: - StoriesMocks (mock data for stories feature)
 enum StoriesMocks {
     static let groups: [StoryGroup] = {
         func medias(_ names: [String], title: String, prefix: String? = nil) -> [StoryMedia] {
@@ -19,7 +20,7 @@ enum StoriesMocks {
                 }
                 
                 let subtitle = localizedPrefix.map { "\($0) \(localizedXofY)" }
-
+                
                 return StoryMedia(
                     imageName: name,
                     title: title,
@@ -28,7 +29,7 @@ enum StoriesMocks {
                 )
             }
         }
-
+        
         return [
             StoryGroup(
                 title: "stories.first",

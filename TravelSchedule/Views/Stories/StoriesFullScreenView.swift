@@ -12,6 +12,7 @@ public protocol StoryDisplayable {
     var subtitle: String? { get }
 }
 
+// MARK: - StoriesFullScreenView
 struct StoriesFullScreenView<Item: StoryDisplayable>: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var viewedStore: StoriesViewedStore
@@ -21,16 +22,19 @@ struct StoriesFullScreenView<Item: StoryDisplayable>: View {
     let autoAdvance: Bool
     let duration: TimeInterval
     
+    // MARK: - State
     @State private var progress: CGFloat = 0
-    @State private var timer: Timer?
     @State private var isPaused = false
+    @State private var ticker: Task<Void, Never>?
     
+    // MARK: - Gestures
     private var longPress: some Gesture {
         LongPressGesture(minimumDuration: 0.15)
             .onChanged { _ in pause() }
             .onEnded { _ in resume() }
     }
     
+    // MARK: - Init
     init(items: [Item], startIndex: Int, autoAdvance: Bool = true, duration: TimeInterval = 6) {
         self.items = items
         self.autoAdvance = autoAdvance
@@ -38,6 +42,7 @@ struct StoriesFullScreenView<Item: StoryDisplayable>: View {
         _index = State(initialValue: startIndex)
     }
     
+    // MARK: - Body
     var body: some View {
         ZStack {
             TabView(selection: $index) {
@@ -46,8 +51,6 @@ struct StoriesFullScreenView<Item: StoryDisplayable>: View {
                         Image(items[i].imageName)
                             .resizable()
                             .scaledToFill()
-                            .ignoresSafeArea()
-                        
                             .ignoresSafeArea()
                         
                         VStack(alignment: .leading, spacing: 16) {
@@ -72,7 +75,7 @@ struct StoriesFullScreenView<Item: StoryDisplayable>: View {
                                     .frame(maxWidth: .infinity, alignment: .leading)
                             }
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading) 
+                        .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, 16)
                         .padding(.bottom, 40)
                     }
@@ -129,45 +132,84 @@ struct StoriesFullScreenView<Item: StoryDisplayable>: View {
         
         .onAppear {
             viewedStore.markViewed(media: items[index].id)
-            startTimerIfNeeded()
+            startTickerIfNeeded()
         }
         .onChange(of: index) {
             for id in items.prefix(index + 1).map(\.id) {
                 viewedStore.markViewed(media: id)
             }
-            resetTimer()
+            resetTicker()
         }
-        .onDisappear { timer?.invalidate() }
+        .onDisappear {
+            ticker?.cancel()
+            ticker = nil
+        }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in pause() }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in resume() }
     }
     
+    // MARK: - Progress / Segments
     private func segmentState(for i: Int) -> StorySegmentBar.State {
         if i < index { return .past }
         if i == index { return .current }
         return .future
     }
     
-    private func next() { index < items.count - 1 ? (index += 1) : dismiss() }
-    private func previous() { if index > 0 { index -= 1 } }
+    // MARK: - Navigation
+    @MainActor
+    private func next() {
+        if index < items.count - 1 {
+            index += 1
+        } else {
+            dismiss()
+        }
+    }
     
-    private func startTimerIfNeeded() {
+    @MainActor
+    private func previous() {
+        if index > 0 { index -= 1 }
+    }
+    
+    // MARK: - Auto-advance ticker (Concurrency-safe)
+    private func startTickerIfNeeded() {
         guard autoAdvance else { return }
-        progress = 0
-        timer?.invalidate()
-        timer = Timer.scheduledTimer(withTimeInterval: 0.02, repeats: true) { t in
-            guard !isPaused else { return }
-            progress += 0.02 / duration
-            if progress >= 1 {
-                t.invalidate()
-                next()
+        ticker?.cancel()
+        ticker = Task {
+            await MainActor.run { progress = 0 }
+            let step = max(0.0001, 0.02 / max(0.2, duration))
+            
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 20_000_000)
+                var shouldFinish = false
+                
+                await MainActor.run {
+                    if !isPaused {
+                        progress += step
+                        if progress >= 1 {
+                            shouldFinish = true
+                        }
+                    }
+                }
+                
+                if shouldFinish {
+                    await MainActor.run {
+                        next()
+                    }
+                    break
+                }
             }
         }
     }
     
-    private func resetTimer() { timer?.invalidate(); startTimerIfNeeded() }
-    private func pause() { isPaused = true }
-    private func resume() { isPaused = false }
+    private func resetTicker() {
+        ticker?.cancel()
+        ticker = nil
+        startTickerIfNeeded()
+    }
+    
+    // MARK: - Pause/Resume
+    private func pause() { Task { await MainActor.run { isPaused = true } } }
+    private func resume() { Task { await MainActor.run { isPaused = false } } }
 }
 
 #Preview("Stories Fullscreen") {

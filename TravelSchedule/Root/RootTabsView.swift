@@ -10,6 +10,7 @@ enum AppTab: Hashable {
     case settings
 }
 
+// MARK: - RootTabsView
 struct RootTabsView: View {
     @State private var selectedTab: AppTab = .main
     @StateObject private var mainRouter = MainRouter()
@@ -21,6 +22,7 @@ struct RootTabsView: View {
     @State private var resetMainOnNextSelect = false
     
     var body: some View {
+        // MARK: - Tabs
         TabView(selection: $selectedTab) {
             NavigationStack(path: $mainRouter.path) {
                 MainView()
@@ -46,14 +48,15 @@ struct RootTabsView: View {
             .tag(AppTab.settings)
         }
         .tint(.ypBlack)
-        .onChange(of: errors.serverError) { hasError in
-            if hasError {
+        // MARK: - Change Handlers
+        .onChange(of: errors.serverError) { _, newValue in
+            if newValue {
                 selectedTab = .settings
                 resetMainOnNextSelect = true
             }
         }
-        .onChange(of: selectedTab) { tab in
-            if tab == .main, resetMainOnNextSelect {
+        .onChange(of: selectedTab) { _, newValue in
+            if newValue == .main, resetMainOnNextSelect {
                 mainRouter.path = []
                 Task { @MainActor in
                     await apiClient.invalidateStationsListCache()

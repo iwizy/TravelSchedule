@@ -9,10 +9,11 @@
 //  - debugSize(label:)  — печать размера/координат в консоль
 //  - debugOverlay(label:) — выводит размер поверх вью (лейблом)
 
-
 import SwiftUI
 
 #if DEBUG
+
+// MARK: - Public modifiers (border/background)
 
 public extension View {
     func debugBorder(_ color: Color = .red, width: CGFloat = 1) -> some View {
@@ -24,6 +25,7 @@ public extension View {
     }
 }
 
+// MARK: - Size logger modifier
 
 private struct DebugSizeModifier: ViewModifier {
     let label: String
@@ -62,13 +64,15 @@ private struct DebugSizeModifier: ViewModifier {
     }
 }
 
+// MARK: - Public API (size)
+
 public extension View {
     func debugSize(_ label: String = "") -> some View {
         modifier(DebugSizeModifier(label: label))
     }
 }
 
-// MARK: - Текстовый оверлей с размерами поверх вью
+// MARK: - Overlay label modifier
 
 private struct DebugOverlayModifier: ViewModifier {
     let label: String
@@ -99,6 +103,8 @@ private struct DebugOverlayModifier: ViewModifier {
     }
 }
 
+// MARK: - Public API (overlay)
+
 public extension View {
     func debugOverlay(_ label: String = "") -> some View {
         modifier(DebugOverlayModifier(label: label))
@@ -106,4 +112,3 @@ public extension View {
 }
 
 #endif
-

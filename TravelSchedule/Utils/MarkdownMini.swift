@@ -5,6 +5,8 @@
 
 import Foundation
 
+// MARK: - Inline & Block Models
+
 public enum MDInline: Equatable, Sendable {
     case text(String)
     case bold(String)
@@ -19,6 +21,8 @@ public enum MDBlock: Equatable, Sendable {
     case paragraph([MDInline])
     case list([[MDInline]])
 }
+
+// MARK: - Public API
 
 public enum MarkdownMini {
     public static func parse(_ md: String) -> [MDBlock] {
@@ -71,6 +75,8 @@ public enum MarkdownMini {
         return result
     }
     
+    // MARK: - Normalization
+    
     public static func normalize(_ string: String) -> String {
         var t = string.replacingOccurrences(of: "\r\n", with: "\n")
             .replacingOccurrences(of: "\r", with: "\n")
@@ -81,6 +87,8 @@ public enum MarkdownMini {
             .joined(separator: "\n")
         return t
     }
+    
+    // MARK: - Block Parsing
     
     public static func parseBlocks(_ md: String) -> [MDBlock] {
         let rawBlocks = md
@@ -114,6 +122,8 @@ public enum MarkdownMini {
             return .paragraph(parseInlines(paragraph))
         }
     }
+    
+    // MARK: - Inline Parsing
     
     private static func parseInlines(_ string: String) -> [MDInline] {
         if string.isEmpty { return [] }
@@ -180,6 +190,8 @@ public enum MarkdownMini {
         return mergeAdjacentTexts(result)
     }
     
+    // MARK: - Utilities
+    
     private static func mergeAdjacentTexts(_ inlines: [MDInline]) -> [MDInline] {
         var out: [MDInline] = []
         for item in inlines {
@@ -193,6 +205,7 @@ public enum MarkdownMini {
         return out
     }
     
+    // MARK: - Types
+    
     private enum InlineType { case link, bold, italic }
 }
-

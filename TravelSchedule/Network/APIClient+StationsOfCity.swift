@@ -6,6 +6,7 @@
 import Foundation
 
 extension APIClient {
+    // MARK: - StationsOfCity DTO
     struct StationLite: Hashable, Codable, Sendable {
         let id: String
         let title: String
@@ -16,6 +17,7 @@ extension APIClient {
         let cityId: String?
     }
     
+    // MARK: - StationsOfCity API
     func getStationsOfCity(
         cityTitle: String,
         cityId: String?
@@ -28,6 +30,7 @@ extension APIClient {
             let catalog = try await getStationsListCached()
             let countries = catalog.countries ?? []
             
+            // MARK: Helpers — code normalization
             func normalizeCityCode(_ raw: String?) -> String? {
                 guard var s = raw?.trimmingCharacters(in: .whitespacesAndNewlines),
                       !s.isEmpty else { return nil }
@@ -42,6 +45,7 @@ extension APIClient {
                 return "s\(digits)"
             }
             
+            // MARK: Mapping
             func makeStationLite(from st: Components.Schemas.Station, cityId: String?) -> StationLite? {
                 let rawCode = st.code
                 ?? st.codes?.yandex
@@ -61,6 +65,7 @@ extension APIClient {
                 )
             }
             
+            // MARK: Collect
             func collectStations(where predicate: (Components.Schemas.Settlement) -> Bool,
                                  cityIdForResult: String?) -> ([StationLite], Int, Int) {
                 var acc: [StationLite] = []
@@ -84,9 +89,10 @@ extension APIClient {
                 return (acc, matchedSettlements, rawStationsSeen)
             }
             
+            // MARK: Search by cityId code
             let normalizedId = normalizeCityCode(cityId)
             if let code = normalizedId {
-                let (byCode, matched, rawCount) = collectStations(where: { settlement in
+                let (byCode, _, _) = collectStations(where: { settlement in
                     let sc = settlement.codes
                     let sCode = sc?.yandex_code ?? sc?.yandex
                     if let sCode, let norm = normalizeCityCode(sCode) {
@@ -100,10 +106,11 @@ extension APIClient {
                 }
             }
             
+            // MARK: Search by title (exact → contains)
             let qTitle = cityTitle.trimmingCharacters(in: .whitespacesAndNewlines)
             let qLower = qTitle.lowercased()
             
-            let (byExact, exactMatched, exactRaw) = collectStations(where: { s in
+            let (byExact, _, _) = collectStations(where: { s in
                 let t = (s.title ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
                 return t.compare(qTitle, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame
             }, cityIdForResult: normalizedId)
@@ -112,7 +119,7 @@ extension APIClient {
                 return byExact
             }
             
-            let (byContains, containsMatched, containsRaw) = collectStations(where: { s in
+            let (byContains, _, _) = collectStations(where: { s in
                 let t = (s.title ?? "").trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
                 return t.contains(qLower)
             }, cityIdForResult: normalizedId)

@@ -5,6 +5,7 @@
 
 import Foundation
 
+// MARK: - Russian cities
 extension APIClient {
     func getRussianCities(force: Bool = false) async throws -> [City] {
         let catalog = try await getStationsListCached(force: force)

@@ -7,17 +7,21 @@ import Foundation
 
 @MainActor
 final class CarriersListViewModel: ObservableObject {
+    // MARK: - Published State
     @Published var options: [CarrierOption] = []
     @Published var isChecking: Bool = false
     @Published var hasAvailability: Bool? = nil
     
+    // MARK: - Cache / Internal State
     private var cityToStationsCache: [String: [APIClient.StationLite]] = [:]
     private var segments: [APIClient.BetweenSegment] = []
     
+    // MARK: - Init
     init() {
         self.options = []
     }
     
+    // MARK: - Public API
     func checkAvailabilityReal(apiClient: APIClient, summary: RouteSummary) async {
         print("➡️ [CarriersVM] real check start summary=\(summary)")
         isChecking = true
@@ -101,7 +105,7 @@ final class CarriersListViewModel: ObservableObject {
         }
     }
     
-    
+    // MARK: - Station Code Resolution
     private func resolveStationCode(apiClient: APIClient, cityTitle: String, stationTitle: String) async throws -> String? {
         let key = cityTitle.lowercased()
         
@@ -128,6 +132,7 @@ final class CarriersListViewModel: ObservableObject {
         return stations.first(where: { $0.title.lowercased().contains(target) })?.id
     }
     
+    // MARK: - Formatting
     private static let isoParser: ISO8601DateFormatter = {
         let f = ISO8601DateFormatter()
         f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
@@ -204,9 +209,9 @@ final class CarriersListViewModel: ObservableObject {
     private static func transferNote(from seg: APIClient.BetweenSegment) -> String? {
         seg.hasTransfer ? "С пересадкой" : nil
     }
-    
 }
 
+// MARK: - Helpers
 private extension Array where Element: Hashable {
     func uniqued() -> [Element] {
         var set = Set<Element>()

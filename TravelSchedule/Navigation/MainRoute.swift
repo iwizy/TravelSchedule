@@ -5,11 +5,13 @@
 
 import Foundation
 
+// MARK: - RouteField enum
 enum RouteField: Hashable, Sendable {
     case from
     case to
 }
 
+// MARK: - RouteSummary model
 struct RouteSummary: Hashable, Sendable {
     let fromCity: String
     let fromStation: String
@@ -21,6 +23,7 @@ struct RouteSummary: Hashable, Sendable {
     }
 }
 
+// MARK: - MainRoute enum (navigation destinations)
 enum MainRoute: Hashable, Sendable {
     case city(RouteField)
     case station(City, RouteField)

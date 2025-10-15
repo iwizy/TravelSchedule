@@ -7,6 +7,7 @@ import Foundation
 import OpenAPIRuntime
 import OpenAPIURLSession
 
+// MARK: - APIClient
 actor APIClient {
     
     let apikey: String
@@ -39,6 +40,7 @@ actor APIClient {
         )
     }
     
+    // MARK: - Request logging
     @discardableResult
     func logRequest<T>(
         _ name: String,
@@ -49,7 +51,6 @@ actor APIClient {
             throw ServerHTTPError(statusCode: 500)
         }
         
-        let t0 = Date()
         do {
             let value = try await work()
             return value
@@ -58,6 +59,7 @@ actor APIClient {
         }
     }
     
+    // MARK: - Caching
     func getStationsListCached(force: Bool = false) async throws -> Components.Schemas.AllStationsResponse {
         if !force, let cached = stationsListCache {
             return cached
@@ -72,6 +74,7 @@ actor APIClient {
     }
 }
 
+// MARK: - Helpers
 extension APIClient {
     struct ServerHTTPError: Error, Sendable {
         let statusCode: Int

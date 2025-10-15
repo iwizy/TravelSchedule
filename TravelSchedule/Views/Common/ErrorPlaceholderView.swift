@@ -5,6 +5,7 @@
 
 import SwiftUI
 
+// MARK: - AppErrorType
 enum AppErrorType {
     case server
     case noInternet
@@ -17,6 +18,7 @@ enum AppErrorType {
             "Нет интернета"
         }
     }
+    
     var imageName: String {
         switch self {
         case .server:
@@ -27,6 +29,7 @@ enum AppErrorType {
     }
 }
 
+// MARK: - ErrorPlaceholderView
 struct ErrorPlaceholderView: View {
     let type: AppErrorType
     
@@ -36,6 +39,7 @@ struct ErrorPlaceholderView: View {
                 .resizable()
                 .scaledToFit()
                 .frame(maxWidth: 223)
+            
             Text(type.title)
                 .font(.system(size: 24, weight: .bold))
                 .foregroundStyle(.ypBlack)
@@ -45,6 +49,7 @@ struct ErrorPlaceholderView: View {
     }
 }
 
+// MARK: - Preview
 #Preview {
     ErrorPlaceholderView(type: .server)
 }

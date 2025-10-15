@@ -5,10 +5,13 @@
 
 import SwiftUI
 
+// MARK: - SearchBar
 struct SearchBar: View {
+    // MARK: Properties
     @Binding var text: String
     let placeholder: String
     
+    // MARK: Body
     var body: some View {
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
@@ -36,17 +39,7 @@ struct SearchBar: View {
     }
 }
 
-#Preview("SearchBar — пустой") {
-    @Previewable @State var text = ""
-    return SearchBar(text: $text, placeholder: "Введите запрос")
-        .padding()
-}
-
-#Preview("SearchBar — с текстом") {
-    @Previewable @State var text = "Москва"
-    return SearchBar(text: $text, placeholder: "Введите запрос")
-        .padding()
-}
+// MARK: - Preview
 #Preview("SearchBar — пустой") {
     @Previewable @State var text = ""
     return SearchBar(text: $text, placeholder: "Введите запрос")

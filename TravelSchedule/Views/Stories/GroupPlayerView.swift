@@ -17,9 +17,12 @@ struct GroupPlayerView: View {
     
     @State private var index: Int
     @State private var progress: CGFloat = 0
-    @State private var timer: Timer?
     @State private var isPaused = false
     
+    // MARK: - Ticker
+    @State private var ticker: Task<Void, Never>?
+    
+    // MARK: - Init
     init(
         group: StoryGroup,
         startIndex: Int,
@@ -39,6 +42,7 @@ struct GroupPlayerView: View {
         _index = State(initialValue: startIndex)
     }
     
+    // MARK: - Derived
     private var medias: [StoryMedia] { group.items }
     
     private var horizontalSwipe: some Gesture {
@@ -57,6 +61,7 @@ struct GroupPlayerView: View {
             }
     }
     
+    // MARK: - View
     var body: some View {
         ZStack {
             Image(medias[index].imageName)
@@ -146,24 +151,26 @@ struct GroupPlayerView: View {
         )
         .onAppear {
             onViewed(medias[index].id)
-            startTimer()
+            startTicker()
         }
         .onChange(of: index) { _, newValue in
             onViewed(medias[newValue].id)
             onUpdateIndex(newValue)
-            resetTimer()
+            resetTicker()
         }
-        .onDisappear { timer?.invalidate() }
+        .onDisappear { cancelTicker() }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in pause() }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in resume() }
     }
     
+    // MARK: - Segment State
     private func segmentState(for i: Int) -> StorySegmentBar.State {
         if i < index { return .past }
         if i == index { return .current }
         return .future
     }
     
+    // MARK: - Navigation
     private func next() {
         if index < medias.count - 1 {
             index += 1
@@ -180,22 +187,41 @@ struct GroupPlayerView: View {
         }
     }
     
-    private func startTimer() {
+    // MARK: - Ticker control (Structured Concurrency)
+    private func startTicker() {
+        cancelTicker()
         progress = 0
-        isPaused = false        
-        timer?.invalidate()
-        let dur = max(0.2, medias[index].duration)
-        timer = Timer.scheduledTimer(withTimeInterval: 0.02, repeats: true) { t in
-            guard !isPaused else { return }
-            progress += 0.02 / dur
-            if progress >= 1 {
-                t.invalidate()
-                next()
+        isPaused = false
+        
+        let duration = max(0.2, medias[index].duration)
+        let step: Double = 0.02
+        
+        ticker = Task {
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 20_000_000)
+                await MainActor.run {
+                    guard !isPaused else { return }
+                    progress += step / duration
+                    if progress >= 1 {
+                        progress = 1
+                        next()
+                    }
+                }
             }
         }
     }
     
-    private func resetTimer() { startTimer() }
+    private func resetTicker() {
+        cancelTicker()
+        startTicker()
+    }
+    
+    private func cancelTicker() {
+        ticker?.cancel()
+        ticker = nil
+    }
+    
+    // MARK: - Pause/Resume
     private func pause() { isPaused = true }
     private func resume() { isPaused = false }
 }

@@ -5,6 +5,7 @@
 
 import SwiftUI
 
+// MARK: - ErrorOverlayHost
 struct ErrorOverlayHost<Content: View>: View {
     @EnvironmentObject private var network: NetworkMonitor
     private let content: Content
@@ -21,6 +22,7 @@ struct ErrorOverlayHost<Content: View>: View {
     var body: some View {
         ZStack {
             content
+            
             if !network.isOnline {
                 ErrorPlaceholderView(type: .noInternet)
                     .ignoresSafeArea(.container, edges: [.top, .leading, .trailing])

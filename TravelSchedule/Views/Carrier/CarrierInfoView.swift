@@ -5,6 +5,7 @@
 
 import SwiftUI
 
+// MARK: - CarrierInfoView
 struct CarrierInfoView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject var viewModel: CarrierInfoViewModel
@@ -13,6 +14,7 @@ struct CarrierInfoView: View {
         _viewModel = StateObject(wrappedValue: CarrierInfoViewModel(carrier: carrier))
     }
     
+    // MARK: - Body
     var body: some View {
         VStack(spacing: 0) {
             logoContainer
@@ -51,9 +53,13 @@ struct CarrierInfoView: View {
                 }
             }
         }
+        // keep navbar background white in both light/dark themes
+        .toolbarBackground(Color(.ypWhite), for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
         .toolbar(.hidden, for: .tabBar)
     }
     
+    // MARK: - Subviews
     private var logoContainer: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 24)
@@ -82,6 +88,7 @@ struct CarrierInfoView: View {
         .padding(.horizontal, 16)
     }
     
+    // MARK: - Row
     private func contactRow(title: String, value: String, url: URL?) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             Text(title)

@@ -5,11 +5,16 @@
 
 import SwiftUI
 
+// MARK: - SettingsView
 struct SettingsView: View {
+    // MARK: Dependencies
     @EnvironmentObject var themeManager: ThemeManager
     @Environment(\.colorScheme) private var systemScheme
+    
+    // MARK: State
     @State private var showAgreement = false
     
+    // MARK: Bindings
     private var isDarkBinding: Binding<Bool> {
         Binding(
             get: { (themeManager.effectiveScheme ?? systemScheme) == .dark },
@@ -17,6 +22,7 @@ struct SettingsView: View {
         )
     }
     
+    // MARK: Body
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {

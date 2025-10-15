@@ -5,6 +5,7 @@
 
 import SwiftUI
 
+// MARK: - StorySegmentBar
 struct StorySegmentBar: View {
     enum State { case past, current, future }
     let state: State

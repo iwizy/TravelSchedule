@@ -5,6 +5,7 @@
 
 import Foundation
 
+// MARK: - Carrier
 struct Carrier: Identifiable, Hashable, Codable, Sendable {
     let id: String
     let name: String

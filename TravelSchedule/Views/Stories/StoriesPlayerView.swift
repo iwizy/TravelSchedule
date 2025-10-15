@@ -5,6 +5,7 @@
 
 import SwiftUI
 
+// MARK: - StoriesPlayerView
 struct StoriesPlayerView: View {
     let groups: [StoryGroup]
     @State private var groupIndex: Int
@@ -12,12 +13,14 @@ struct StoriesPlayerView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var store: StoriesViewedStore
     
+    // MARK: - Init
     init(groups: [StoryGroup], startGroupIndex: Int, startMediaIndex: Int) {
         self.groups = groups
         _groupIndex = State(initialValue: startGroupIndex)
         _mediaIndex = State(initialValue: startMediaIndex)
     }
     
+    // MARK: - Body
     var body: some View {
         ZStack {
             Color.ypBlackUniversal.ignoresSafeArea()

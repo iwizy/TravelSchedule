@@ -5,11 +5,11 @@
 
 import SwiftUI
 
+// MARK: - App Entry Point
 @main
 struct TravelScheduleApp: App {
     @StateObject private var themeManager = ThemeManager()
     @StateObject private var errorCenter  = ErrorCenter.shared
-    // ✅ NEW: прокидываем монитор сети для ErrorOverlayHost
     @StateObject private var network      = NetworkMonitor.shared
     
     private let apiClient = APIClient(
@@ -25,10 +25,6 @@ struct TravelScheduleApp: App {
         
         UITabBar.appearance().standardAppearance = appearance
         UITabBar.appearance().scrollEdgeAppearance = appearance
-        
-        UINavigationBar.appearance().isTranslucent = false
-        UINavigationBar.appearance().setBackgroundImage(UIImage(), for: .default)
-        UINavigationBar.appearance().shadowImage = UIImage()
         
         let nav = UINavigationBarAppearance()
         nav.configureWithOpaqueBackground()
@@ -50,7 +46,7 @@ struct TravelScheduleApp: App {
                 .environment(\.apiClient, apiClient)
                 .environmentObject(themeManager)
                 .environmentObject(errorCenter)
-                .environmentObject(network)              // ✅ NEW: вот его и не хватало
+                .environmentObject(network)
                 .onAppear {
                     let isDark = UITraitCollection.current.userInterfaceStyle == .dark
                     themeManager.bindToSystem(isDark ? .dark : .light)

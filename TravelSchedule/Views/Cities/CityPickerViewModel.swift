@@ -5,13 +5,20 @@
 
 import Foundation
 
+// MARK: - ViewModel
+
 @MainActor
 final class CityPickerViewModel: ObservableObject {
+    
+    // MARK: - State
+    
     @Published var allCities: [City] = []
     @Published var filtered: [City] = []
     @Published var searchText: String = ""
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
+    
+    // MARK: - Public API
     
     func load(apiClient: APIClient, force: Bool = false) async {
         guard !isLoading else { return }
@@ -69,6 +76,8 @@ final class CityPickerViewModel: ObservableObject {
         searchText = q
         applySearch()
     }
+    
+    // MARK: - Helpers
     
     private func normalize(_ s: String) -> String {
         let replacedYo = s

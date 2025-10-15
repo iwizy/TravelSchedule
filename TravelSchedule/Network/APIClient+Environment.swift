@@ -5,6 +5,7 @@
 
 import SwiftUI
 
+// MARK: - APIClient EnvironmentKey
 private struct APIClientKey: EnvironmentKey {
     static let defaultValue: APIClient = {
         let baseURL: URL = {
@@ -20,6 +21,7 @@ private struct APIClientKey: EnvironmentKey {
     }()
 }
 
+// MARK: - EnvironmentValues extension
 extension EnvironmentValues {
     var apiClient: APIClient {
         get { self[APIClientKey.self] }
@@ -27,7 +29,7 @@ extension EnvironmentValues {
     }
 }
 
-
+// MARK: - View extension
 extension View {
     func apiClient(_ client: APIClient) -> some View {
         environment(\.apiClient, client)

@@ -8,6 +8,7 @@ import OpenAPIRuntime
 import OpenAPIURLSession
 
 extension APIClient {
+    // MARK: - StationsList API
     func getStationsList() async throws -> Components.Schemas.AllStationsResponse {
         try await logRequest("stations_list", params: [
             "lang": "ru_RU",
@@ -29,11 +30,9 @@ extension APIClient {
                     default:
                         throw ServerHTTPError(statusCode: 200)
                     }
-                    
                 default:
                     throw ServerHTTPError(statusCode: 0)
                 }
-                
             } catch {
                 let fallbackModel = try await Self.fetchStationsListFallback(
                     session: self.session,
@@ -45,6 +44,7 @@ extension APIClient {
         }
     }
     
+    // MARK: - Fallback (manual request)
     private static func fetchStationsListFallback(
         session: URLSession,
         apikey: String,

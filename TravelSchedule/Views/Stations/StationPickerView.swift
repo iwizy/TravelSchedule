@@ -5,7 +5,9 @@
 
 import SwiftUI
 
+// MARK: - StationPickerView
 struct StationPickerView: View {
+    // MARK: Props
     let city: City
     let onPick: (_ station: Station) -> Void
     
@@ -15,6 +17,7 @@ struct StationPickerView: View {
     @StateObject private var viewModel = StationPickerViewModel()
     @State private var query: String = ""
     
+    // MARK: Init
     init(city: City, initialQuery: String? = nil, onPick: @escaping (_ station: Station) -> Void) {
         self.city = city
         self.onPick = onPick
@@ -23,8 +26,10 @@ struct StationPickerView: View {
         }
     }
     
+    // MARK: Computed
     private var filteredStations: [Station] { viewModel.filtered }
     
+    // MARK: Body
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
@@ -93,6 +98,7 @@ struct StationPickerView: View {
                     .transition(.opacity)
             }
         }
+        // MARK: Tasks
         .task {
             print("➡️ [StationPicker] task load start city=\(city.title) (\(city.id))")
             await viewModel.load(apiClient: apiClient, city: city)

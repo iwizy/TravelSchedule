@@ -5,6 +5,7 @@
 
 import Foundation
 
+// MARK: - CarrierOption
 struct CarrierOption: Identifiable, Hashable, Sendable {
     let id = UUID()
     let carrierName: String
@@ -18,8 +19,6 @@ struct CarrierOption: Identifiable, Hashable, Sendable {
     var phoneE164: String?
     var phoneDisplay: String?
     var logoURL: URL?
-}
-
-extension CarrierOption {
+    
     var hasTransfer: Bool { transferNote != nil }
 }
