@@ -2,14 +2,15 @@
 //  UserAgreementView.swift
 //  TravelSchedule
 //
-//  Экран отображения соглашения
 
 import SwiftUI
 
+// MARK: - UserAgreementView
 struct UserAgreementView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var blocks: [MDBlock] = []
     
+    // MARK: Body
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -23,7 +24,7 @@ struct UserAgreementView: View {
             .scrollContentBackground(.hidden)
             .background(Color.ypWhite.ignoresSafeArea())
             .tint(.ypBlueUniversal)
-            .navigationTitle("Пользовательское соглашение")
+            .navigationTitle(LocalizedStringKey("settings.agreement"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
@@ -36,20 +37,22 @@ struct UserAgreementView: View {
         .ignoresSafeArea(edges: .bottom)
     }
     
+    // MARK: Data Loading
     private func loadMarkdown() {
         guard let url = Bundle.main.url(forResource: "UserAgreement", withExtension: "md"),
               let md = try? String(contentsOf: url, encoding: .utf8)
         else {
-            blocks = [.paragraph([.text("Не удалось загрузить документ.")])]
             return
         }
         blocks = MarkdownMini.parse(md)
     }
 }
 
+// MARK: - AgreementMarkdownBlockView
 private struct AgreementMarkdownBlockView: View {
     let block: MDBlock
     
+    // MARK: Body
     var body: some View {
         switch block {
         case .h1(let inlines):

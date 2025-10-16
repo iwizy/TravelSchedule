@@ -2,15 +2,17 @@
 //  AgreementBlockView.swift
 //  TravelSchedule
 //
-//  Блок просмотра соглашения
 
 import SwiftUI
 
+// MARK: - AgreementBlockView
 public struct AgreementBlockView: View {
     public let block: MDBlock
     
+    // MARK: Init
     public init(block: MDBlock) { self.block = block }
     
+    // MARK: Helpers
     private func inlineText(_ inlines: [MDInline]) -> Text {
         inlines.reduce(Text("")) { acc, inline in
             switch inline {
@@ -26,6 +28,7 @@ public struct AgreementBlockView: View {
         }
     }
     
+    // MARK: Body
     public var body: some View {
         switch block {
         case .h1(let inlines):
@@ -61,6 +64,7 @@ public struct AgreementBlockView: View {
     }
 }
 
+// MARK: - Preview
 #Preview {
     VStack(alignment: .leading, spacing: 16) {
         AgreementBlockView(block: .h1([.text("ДОГОВОР-ОФЕРТА")]))

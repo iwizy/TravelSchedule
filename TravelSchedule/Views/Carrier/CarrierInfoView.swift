@@ -2,10 +2,10 @@
 //  CarrierInfoView.swift
 //  TravelSchedule
 //
-//  Экран информации о перевозчике
 
 import SwiftUI
 
+// MARK: - CarrierInfoView
 struct CarrierInfoView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject var viewModel: CarrierInfoViewModel
@@ -14,6 +14,7 @@ struct CarrierInfoView: View {
         _viewModel = StateObject(wrappedValue: CarrierInfoViewModel(carrier: carrier))
     }
     
+    // MARK: - Body
     var body: some View {
         VStack(spacing: 0) {
             logoContainer
@@ -27,14 +28,13 @@ struct CarrierInfoView: View {
             
             contactRow(
                 title: "E-mail",
-                value: viewModel.carrier.email ?? "—",
-                url: viewModel.carrier.email.flatMap { URL(string: "mailto:\($0)") }
+                value: viewModel.emailValue,
+                url: viewModel.emailURL
             )
-            
             contactRow(
                 title: "Телефон",
-                value: viewModel.carrier.phoneDisplay ?? "—",
-                url: viewModel.carrier.phoneE164.flatMap { URL(string: "tel://\($0)") }
+                value: viewModel.phoneDisplayValue,
+                url: viewModel.phoneURL
             )
             
             Spacer(minLength: 0)
@@ -43,7 +43,7 @@ struct CarrierInfoView: View {
         .background(Color.ypWhite)
         .ignoresSafeArea(edges: .bottom)
         .navigationBarBackButtonHidden(true)
-        .navigationTitle(viewModel.title)
+        .navigationTitle("Информация о перевозчике")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
@@ -53,23 +53,42 @@ struct CarrierInfoView: View {
                 }
             }
         }
+        // keep navbar background white in both light/dark themes
+        .toolbarBackground(Color(.ypWhite), for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
         .toolbar(.hidden, for: .tabBar)
     }
     
+    // MARK: - Subviews
     private var logoContainer: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 24)
                 .fill(Color.ypWhiteUniversal)
             
-            Image(viewModel.carrier.logoAsset)
-                .resizable()
-                .scaledToFit()
-                .frame(height: 104)
+            if let url = viewModel.carrier.logoURL {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .success(let img):
+                        img
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height: 104)
+                            .padding(.horizontal, 16)
+                    case .empty, .failure(_):
+                        EmptyView()
+                    @unknown default:
+                        EmptyView()
+                    }
+                }
+            } else {
+                EmptyView()
+            }
         }
         .frame(height: 104)
         .padding(.horizontal, 16)
     }
     
+    // MARK: - Row
     private func contactRow(title: String, value: String, url: URL?) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             Text(title)
@@ -89,11 +108,5 @@ struct CarrierInfoView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .frame(minHeight: 60, alignment: .center)
         .padding(.horizontal, 16)
-    }
-}
-
-#Preview {
-    NavigationStack {
-        CarrierInfoView(carrier: .mock)
     }
 }

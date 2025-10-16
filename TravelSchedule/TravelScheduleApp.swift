@@ -2,14 +2,21 @@
 //  TravelScheduleApp.swift
 //  TravelSchedule
 //
-//  Created by Alexander Agafonov on 23.08.2025.
-//
 
 import SwiftUI
 
+// MARK: - App Entry Point
 @main
 struct TravelScheduleApp: App {
     @StateObject private var themeManager = ThemeManager()
+    @StateObject private var errorCenter  = ErrorCenter.shared
+    @StateObject private var network      = NetworkMonitor.shared
+    
+    private let apiClient = APIClient(
+        apikey: Constants.apiKey,
+        serverURL: URL(string: Constants.apiURL)!
+    )
+    
     init() {
         let appearance = UITabBarAppearance()
         appearance.configureWithOpaqueBackground()
@@ -18,11 +25,28 @@ struct TravelScheduleApp: App {
         
         UITabBar.appearance().standardAppearance = appearance
         UITabBar.appearance().scrollEdgeAppearance = appearance
+        
+        let nav = UINavigationBarAppearance()
+        nav.configureWithOpaqueBackground()
+        nav.backgroundColor = UIColor(.ypWhite)
+        nav.shadowColor = .clear
+        UINavigationBar.appearance().standardAppearance = nav
+        UINavigationBar.appearance().scrollEdgeAppearance = nav
+        UINavigationBar.appearance().compactAppearance = nav
+        UINavigationBar.appearance().tintColor = UIColor(.ypBlack)
+        
+        UINavigationBar.appearance().isTranslucent = false
+        UINavigationBar.appearance().setBackgroundImage(UIImage(), for: .default)
+        UINavigationBar.appearance().shadowImage = UIImage()
     }
+    
     var body: some Scene {
         WindowGroup {
             RootTabsView()
+                .environment(\.apiClient, apiClient)
                 .environmentObject(themeManager)
+                .environmentObject(errorCenter)
+                .environmentObject(network)
                 .onAppear {
                     let isDark = UITraitCollection.current.userInterfaceStyle == .dark
                     themeManager.bindToSystem(isDark ? .dark : .light)

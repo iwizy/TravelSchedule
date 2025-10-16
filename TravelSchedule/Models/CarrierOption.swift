@@ -2,11 +2,11 @@
 //  CarrierOption.swift
 //  TravelSchedule
 //
-//  Модель перевозчиков
 
 import Foundation
 
-struct CarrierOption: Identifiable, Hashable {
+// MARK: - CarrierOption
+struct CarrierOption: Identifiable, Hashable, Sendable {
     let id = UUID()
     let carrierName: String
     let logoName: String
@@ -15,8 +15,10 @@ struct CarrierOption: Identifiable, Hashable {
     let arrive: String
     let durationText: String
     let transferNote: String?
+    var email: String?
+    var phoneE164: String?
+    var phoneDisplay: String?
+    var logoURL: URL?
     
-    let email: String?
-    let phoneE164: String?
-    let phoneDisplay: String?
+    var hasTransfer: Bool { transferNote != nil }
 }

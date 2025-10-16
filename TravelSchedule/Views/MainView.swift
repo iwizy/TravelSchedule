@@ -2,10 +2,10 @@
 //  MainView.swift
 //  TravelSchedule
 //
-//  Главный экран
 
 import SwiftUI
 
+// MARK: - MainView
 struct MainView: View {
     @EnvironmentObject var router: MainRouter
     @State private var activeStoryID: UUID?
@@ -30,13 +30,16 @@ struct MainView: View {
     var body: some View {
         VStack(spacing: 0) {
             
+            // MARK: Stories carousel
             storiesCarousel
                 .padding(.top, 16)
             
+            // MARK: Route card
             routeCard
                 .padding(.top, 44)
             
             if isRouteComplete {
+                // MARK: Find button
                 findButton
                     .padding(.top, 16)
             }
@@ -49,6 +52,7 @@ struct MainView: View {
         .toolbar { ToolbarItem(placement: .principal) { EmptyView() } }
         .background(.ypWhite)
         
+        // MARK: Stories fullscreen
         .fullScreenCover(item: $storiesOpen) { ctx in
             StoriesPlayerView(
                 groups: storyGroups,
@@ -58,6 +62,7 @@ struct MainView: View {
             .environmentObject(viewedStore)
         }
         
+        // MARK: Navigation
         .navigationDestination(for: MainRoute.self) { route in
             switch route {
             case .city(let field):
@@ -67,11 +72,11 @@ struct MainView: View {
                 StationPickerView(city: city) { station in
                     switch field {
                     case .from:
-                        fromCity = city.name
-                        fromStation = station.name
+                        fromCity = city.title
+                        fromStation = station.title
                     case .to:
-                        toCity = city.name
-                        toStation = station.name
+                        toCity = city.title
+                        toStation = station.title
                     }
                     router.path = []
                 }
@@ -93,6 +98,7 @@ struct MainView: View {
         }
     }
     
+    // MARK: Stories carousel view
     private var storiesCarousel: some View {
         ScrollView(.horizontal) {
             LazyHStack(spacing: 12) {
@@ -121,6 +127,7 @@ struct MainView: View {
         }
     }
     
+    // MARK: Route card view
     private var routeCard: some View {
         ZStack(alignment: .trailing) {
             RoundedRectangle(cornerRadius: 20, style: .continuous)
@@ -140,7 +147,7 @@ struct MainView: View {
                             router.path.append(.city(.from))
                         } label: {
                             RouteTextRow(
-                                placeholder: "Откуда",
+                                placeholder: "main.from",
                                 valueText: fromTitle
                             )
                         }
@@ -150,7 +157,7 @@ struct MainView: View {
                             router.path.append(.city(.to))
                         } label: {
                             RouteTextRow(
-                                placeholder: "Куда",
+                                placeholder: "main.to",
                                 valueText: toTitle
                             )
                         }
@@ -179,6 +186,7 @@ struct MainView: View {
         }
     }
     
+    // MARK: Find button view
     private var findButton: some View {
         Button {
             guard
@@ -189,7 +197,7 @@ struct MainView: View {
             let summary = RouteSummary(fromCity: fC, fromStation: fS, toCity: tC, toStation: tS)
             router.path.append(.carriers(summary))
         } label: {
-            Text("Найти")
+            Text(LocalizedStringKey("main.search"))
                 .font(.system(size: 17, weight: .bold))
                 .frame(width: 150, height: 60)
                 .foregroundStyle(.ypWhiteUniversal)
@@ -202,6 +210,7 @@ struct MainView: View {
         .padding(.top, 0)
     }
     
+    // MARK: Helpers
     private var isRouteComplete: Bool {
         fromCity != nil && fromStation != nil && toCity != nil && toStation != nil
     }
@@ -224,6 +233,7 @@ struct MainView: View {
     }
 }
 
+// MARK: - StoryCardView
 struct StoryCardView: View {
     let title: String
     let imageName: String
@@ -243,7 +253,8 @@ struct StoryCardView: View {
                 .stroke(isViewed ? Color.clear : Color.ypBlueUniversal, lineWidth: 4)
                 .frame(width: 92, height: 140)
             
-            Text(title)
+            
+            Text(LocalizedStringKey(title))
                 .font(.footnote.weight(.regular))
                 .foregroundStyle(.ypWhiteUniversal)
                 .lineLimit(3)
@@ -255,6 +266,7 @@ struct StoryCardView: View {
     }
 }
 
+// MARK: - RouteTextRow
 private struct RouteTextRow: View {
     let placeholder: String
     let valueText: String
@@ -262,7 +274,7 @@ private struct RouteTextRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             if valueText.isEmpty {
-                Text(placeholder)
+                Text(LocalizedStringKey(placeholder))
                     .font(.system(size: 17, weight: .regular))
                     .foregroundStyle(.ypGrayUniversal)
                     .tint(.ypGrayUniversal)

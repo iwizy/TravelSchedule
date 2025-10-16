@@ -2,16 +2,17 @@
 //  MainRoute.swift
 //  TravelSchedule
 //
-//  Типы навигации
 
 import Foundation
 
-enum RouteField: Hashable {
+// MARK: - RouteField enum
+enum RouteField: Hashable, Sendable {
     case from
     case to
 }
 
-struct RouteSummary: Hashable {
+// MARK: - RouteSummary model
+struct RouteSummary: Hashable, Sendable {
     let fromCity: String
     let fromStation: String
     let toCity: String
@@ -22,7 +23,8 @@ struct RouteSummary: Hashable {
     }
 }
 
-enum MainRoute: Hashable {
+// MARK: - MainRoute enum (navigation destinations)
+enum MainRoute: Hashable, Sendable {
     case city(RouteField)
     case station(City, RouteField)
     case carriers(RouteSummary)

@@ -2,14 +2,16 @@
 //  SearchBar.swift
 //  TravelSchedule
 //
-//  Компонент поиска
 
 import SwiftUI
 
+// MARK: - SearchBar
 struct SearchBar: View {
+    // MARK: Properties
     @Binding var text: String
     let placeholder: String
     
+    // MARK: Body
     var body: some View {
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
@@ -30,13 +32,14 @@ struct SearchBar: View {
                 .buttonStyle(.plain)
             }
         }
-        .frame(width: .infinity, height: 36)
+        .frame(maxWidth: .infinity, minHeight: 36, maxHeight: 36)
         .padding(.horizontal, 8)
         .background(Color(.ypSearch))
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 }
 
+// MARK: - Preview
 #Preview("SearchBar — пустой") {
     @Previewable @State var text = ""
     return SearchBar(text: $text, placeholder: "Введите запрос")

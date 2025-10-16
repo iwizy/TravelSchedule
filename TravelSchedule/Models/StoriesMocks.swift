@@ -2,18 +2,29 @@
 //  StoriesMocks.swift
 //  TravelSchedule
 //
-//  Моки для сториз
 
 import Foundation
 
+// MARK: - StoriesMocks (mock data for stories feature)
 enum StoriesMocks {
     static let groups: [StoryGroup] = {
         func medias(_ names: [String], title: String, prefix: String? = nil) -> [StoryMedia] {
             names.enumerated().map { idx, name in
-                StoryMedia(
+                let xOfYKey = "stories.slide_x_of_y"
+                let xOfYTemplate = Bundle.main.localizedString(forKey: xOfYKey,
+                                                               value: "%1$d из %2$d",
+                                                               table: nil)
+                let localizedXofY = String(format: xOfYTemplate, idx + 1, names.count)
+                let localizedPrefix = prefix.map {
+                    Bundle.main.localizedString(forKey: $0, value: $0, table: nil)
+                }
+                
+                let subtitle = localizedPrefix.map { "\($0) \(localizedXofY)" }
+                
+                return StoryMedia(
                     imageName: name,
                     title: title,
-                    subtitle: prefix != nil ? "\(prefix!) \(idx + 1) из \(names.count)" : nil,
+                    subtitle: subtitle,
                     duration: 6
                 )
             }
@@ -21,29 +32,29 @@ enum StoriesMocks {
         
         return [
             StoryGroup(
-                title: "Осенние маршруты",
+                title: "stories.first",
                 avatar: "item1",
-                items: medias(["item1", "item2", "item3"], title: "Осенние маршруты", prefix: "Слайд")
+                items: medias(["item1", "item2", "item3"], title: "stories.first", prefix: "stories.slide_prefix")
             ),
             StoryGroup(
-                title: "Где встретить рассвет",
+                title: "stories.second",
                 avatar: "item2",
-                items: medias(["item2", "item3", "item4"], title: "Где встретить рассвет", prefix: "Слайд")
+                items: medias(["item2", "item3", "item4"], title: "stories.second", prefix: "stories.slide_prefix")
             ),
             StoryGroup(
-                title: "Weekend-побеги",
+                title: "stories.third",
                 avatar: "item3",
-                items: medias(["item3", "item4", "item5"], title: "Weekend-побеги", prefix: "Слайд")
+                items: medias(["item3", "item4", "item5"], title: "stories.third", prefix: "stories.slide_prefix")
             ),
             StoryGroup(
-                title: "Новые направления",
+                title: "stories.fourth",
                 avatar: "item4",
-                items: medias(["item4", "item5", "item1"], title: "Новые направления", prefix: "Слайд")
+                items: medias(["item4", "item5", "item1"], title: "stories.fourth", prefix: "stories.slide_prefix")
             ),
             StoryGroup(
-                title: "Поезда мечты",
+                title: "stories.fifth",
                 avatar: "item5",
-                items: medias(["item5", "item1", "item2"], title: "Поезда мечты", prefix: "Слайд")
+                items: medias(["item5", "item1", "item2"], title: "stories.fifth", prefix: "stories.slide_prefix")
             )
         ]
     }()
