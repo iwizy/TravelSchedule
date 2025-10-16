@@ -6,20 +6,20 @@
 import SwiftUI
 
 struct CityPickerView: View {
-    // MARK: - Input
+    // MARK: CityPickerView.Input
     let field: RouteField
     
-    // MARK: - Environment
+    // MARK: CityPickerView.Environment
     @EnvironmentObject var router: MainRouter
     @Environment(\.dismiss) private var dismiss
     @Environment(\.apiClient) private var apiClient
     @EnvironmentObject private var errors: ErrorCenter
     
-    // MARK: - State
+    // MARK: CityPickerView.State
     @StateObject private var viewModel = CityPickerViewModel()
     @State private var query: String = ""
     
-    // MARK: - Init
+    // MARK: CityPickerView.Init
     init(field: RouteField, initialQuery: String? = nil) {
         self.field = field
         if let q = initialQuery {
@@ -27,13 +27,13 @@ struct CityPickerView: View {
         }
     }
     
-    // MARK: - Derived
+    // MARK: CityPickerView.Derived
     private var filteredCities: [City] { viewModel.filtered }
     
-    // MARK: - Body
+    // MARK: CityPickerView.Body
     var body: some View {
         ZStack {
-            VStack(spacing: 0) {
+            VStack(spacing: .zero) {
                 SearchBar(text: $query, placeholder: String(localized: "city.search.placeholder"))
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
@@ -41,37 +41,63 @@ struct CityPickerView: View {
                     .background(Color(.ypWhite))
                 
                 ZStack {
-                    ScrollView {
-                        LazyVStack(spacing: 0) {
-                            ForEach(Array(filteredCities.enumerated()), id: \.element.id) { _, city in
-                                Button {
-                                    print("🧭 [CityPicker] select city=\(city.title) (\(city.id))")
-                                    router.path.append(.station(city, field))
-                                } label: {
-                                    HStack {
-                                        Text(city.title)
-                                        Spacer()
-                                        Image(systemName: "chevron.right")
-                                            .foregroundStyle(.ypBlack)
+                    switch viewModel.state {
+                    case .idle, .loading:
+                        Color.clear
+                            .overlay {
+                                LoaderView()
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                    .background(Color.black.opacity(0.001))
+                                    .transition(.opacity)
+                            }
+                    case .loaded:
+                        ScrollView {
+                            LazyVStack(spacing: .zero) {
+                                ForEach(Array(filteredCities.enumerated()), id: \.element.id) { _, city in
+                                    Button {
+                                        print("🧭 [CityPicker] select city=\(city.title) (\(city.id))")
+                                        router.path.append(.station(city, field))
+                                    } label: {
+                                        HStack {
+                                            Text(city.title)
+                                            Spacer()
+                                            Image(systemName: "chevron.right")
+                                                .foregroundStyle(.ypBlack)
+                                        }
+                                        .frame(height: 60)
+                                        .padding(.horizontal, 16)
+                                        .contentShape(Rectangle())
                                     }
-                                    .frame(height: 60)
-                                    .padding(.horizontal, 16)
-                                    .contentShape(Rectangle())
+                                    .buttonStyle(.plain)
                                 }
-                                .buttonStyle(.plain)
+                            }
+                            .padding(.top, 16)
+                        }
+                        .overlay {
+                            if filteredCities.isEmpty && !query.isEmpty {
+                                Text(LocalizedStringKey("city.picker.not.found"))
+                                    .font(.system(size: 24, weight: .bold))
+                                    .foregroundStyle(.ypBlack)
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal, 24)
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                    .allowsHitTesting(false)
+                                    .transition(.opacity)
                             }
                         }
-                        .padding(.top, 16)
-                    }
-                    
-                    if filteredCities.isEmpty && !query.isEmpty && !viewModel.isLoading {
-                        Text(LocalizedStringKey("city.picker.not.found"))
-                            .font(.system(size: 24, weight: .bold))
-                            .foregroundStyle(.ypBlack)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, 24)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            .allowsHitTesting(false)
+                    case .error(let message):
+                        VStack(spacing: 12) {
+                            Text(LocalizedStringKey("city.picker.title"))
+                                .font(.headline)
+                            Text(message)
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                            Button(String(localized: "common.retry")) {
+                                Task { await viewModel.load(apiClient: apiClient, force: true) }
+                            }
+                            .buttonStyle(.borderedProminent)
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
                 }
             }
@@ -92,25 +118,15 @@ struct CityPickerView: View {
             }
             .toolbar(.hidden, for: .tabBar)
             .background(Color(.ypWhite))
-            .disabled(viewModel.isLoading)
-            
-            if viewModel.isLoading {
-                LoaderView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color.black.opacity(0.001))
-                    .transition(.opacity)
-            }
+            .disabled(viewModel.state == .loading)
         }
-        // MARK: - Tasks
+        // MARK: CityPickerView.Tasks
         .task {
             let force = errors.serverError
             print("➡️ [CityPicker] task load start (force=\(force))")
             await viewModel.load(apiClient: apiClient, force: force)
-            if !query.isEmpty {
-                viewModel.setInitialQuery(query)
-            } else {
-                viewModel.applySearch()
-            }
+            if !query.isEmpty { viewModel.setInitialQuery(query) }
+            else { viewModel.applySearch() }
             print("✅ [CityPicker] task load done")
         }
         .task(id: query) {

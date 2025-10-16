@@ -5,61 +5,68 @@
 
 import Foundation
 
-// MARK: - ViewModel
+// MARK: CityPickerViewModel.OK
 
 @MainActor
 final class CityPickerViewModel: ObservableObject {
     
-    // MARK: - State
+    // MARK: StateMachine
+    enum State: Equatable {
+        case idle
+        case loading
+        case loaded([City])
+        case error(String)
+    }
     
-    @Published var allCities: [City] = []
+    // MARK: Published
+    @Published var state: State = .idle
     @Published var filtered: [City] = []
     @Published var searchText: String = ""
-    @Published var isLoading: Bool = false
-    @Published var errorMessage: String?
     
-    // MARK: - Public API
+    // MARK: Storage
+    private var allCitiesStore: [City] = []
     
+    // MARK: Public API
     func load(apiClient: APIClient, force: Bool = false) async {
-        guard !isLoading else { return }
-        isLoading = true
-        errorMessage = nil
+        guard state != .loading else { return }
+        state = .loading
         print("➡️ [CityPickerVM] load start (force=\(force))")
-        
-        defer { isLoading = false }
         
         do {
             let cities = try await apiClient.getRussianCities(force: force)
-            self.allCities = cities.sorted {
+            let sorted = cities.sorted {
                 $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending
             }
+            allCitiesStore = sorted
             applySearch()
+            state = .loaded(sorted)
             ErrorCenter.shared.serverError = false
-            print("✅ [CityPickerVM] load success cities=\(self.allCities.count)")
+            print("✅ [CityPickerVM] load success cities=\(sorted.count)")
         } catch {
-            self.allCities = []
-            self.filtered = []
+            allCitiesStore = []
+            filtered = []
             
             if let httpErr = error as? APIClient.ServerHTTPError {
                 ErrorCenter.shared.serverError = true
-                self.errorMessage = "HTTP \(httpErr.statusCode)"
+                state = .error("HTTP \(httpErr.statusCode)")
                 print("❌ [CityPickerVM] load error: ServerHTTPError(statusCode: \(httpErr.statusCode))")
                 await apiClient.invalidateStationsListCache()
             } else {
-                self.errorMessage = error.localizedDescription
+                state = .error(error.localizedDescription)
                 print("❌ [CityPickerVM] load error: \(error)")
             }
         }
     }
     
+    // MARK: Search
     func applySearch() {
         let q = normalize(searchText)
         guard !q.isEmpty else {
-            filtered = allCities
+            filtered = allCitiesStore
             return
         }
         
-        filtered = allCities.filter { city in
+        filtered = allCitiesStore.filter { city in
             normalize(city.title).contains(q)
         }
         
@@ -77,8 +84,7 @@ final class CityPickerViewModel: ObservableObject {
         applySearch()
     }
     
-    // MARK: - Helpers
-    
+    // MARK: Helpers
     private func normalize(_ s: String) -> String {
         let replacedYo = s
             .replacingOccurrences(of: "ё", with: "е")
